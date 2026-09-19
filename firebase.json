@@ -7,8 +7,8 @@
       "emailPassword": true,
       "googleSignIn": {
         "authorizedRedirectUris": [
-          "http://localhost",
-          "http://127.0.0.1"
+          "ponio-store.pages.dev",
+          "macos.tail266e58.ts.net"
         ]
       }
     }
