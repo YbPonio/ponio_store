@@ -108,7 +108,7 @@ export class DataTable extends HTMLElement {
                   </td>
                 </tr>
               ` : paginated.map(row => `
-                <tr class="hover:bg-slate-50/80 transition-colors group">
+                <tr class="hover:bg-slate-50/80 transition-colors group cursor-pointer" data-row-id="${escapeHtml(row.id || row.barcode)}">
                   ${this.columns.map(col => `
                     <td class="py-2.5 sm:py-3 px-3 sm:px-4 whitespace-nowrap text-xs">
                       ${col.render ? col.render(row) : escapeHtml(row[col.key] ?? '—')}

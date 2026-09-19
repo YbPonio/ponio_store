@@ -100,7 +100,9 @@ export class AppModal extends HTMLElement {
       this.bodyEl.appendChild(content);
     }
 
-    this.dialog.showModal();
+    if (!this.dialog.open) {
+      this.dialog.showModal();
+    }
   }
 
   close() {

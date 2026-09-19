@@ -2,6 +2,7 @@ import { inventoryService } from '../../services/inventory.service.js';
 import { barcodeLookupService } from '../../services/barcode-lookup.service.js';
 import { ICONS, showToast, escapeHtml } from '../../utils/dom.js';
 import '../common/barcode-scanner-modal.js';
+import '../common/app-modal.js';
 
 export class ProductForm extends HTMLElement {
   constructor() {
@@ -17,7 +18,11 @@ export class ProductForm extends HTMLElement {
   open(product = null, prefill = null) {
     this.editingProduct = product;
     const isEdit = Boolean(product);
-    const modal = this.querySelector('app-modal');
+    let modal = this.querySelector('app-modal');
+    if (!modal) {
+      this.render();
+      modal = this.querySelector('app-modal');
+    }
     if (!modal) return;
 
     const content = document.createElement('form');
@@ -98,8 +103,8 @@ export class ProductForm extends HTMLElement {
             name="category"
             class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
           >
-            ${['Beverages', 'Snacks', 'Groceries', 'Household', 'General'].map(cat => `
-              <option value="${cat}" ${p.category === cat ? 'selected' : ''}>${cat}</option>
+            ${Array.from(new Set(['Beverages', 'Snacks', 'Groceries', 'Household', 'General', p.category].filter(Boolean))).map(cat => `
+              <option value="${escapeHtml(cat)}" ${p.category === cat ? 'selected' : ''}>${escapeHtml(cat)}</option>
             `).join('')}
           </select>
         </div>
@@ -113,7 +118,7 @@ export class ProductForm extends HTMLElement {
             step="0.01"
             min="0"
             required
-            value="${p.costPrice !== '' ? p.costPrice : ''}"
+            value="${p.costPrice !== '' && p.costPrice !== undefined && p.costPrice !== null ? p.costPrice : ''}"
             placeholder="0.00"
             class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
           />
@@ -128,7 +133,7 @@ export class ProductForm extends HTMLElement {
             step="0.01"
             min="0"
             required
-            value="${p.sellingPrice !== '' ? p.sellingPrice : ''}"
+            value="${p.sellingPrice !== '' && p.sellingPrice !== undefined && p.sellingPrice !== null ? p.sellingPrice : ''}"
             placeholder="0.00"
             class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
           />
@@ -146,7 +151,7 @@ export class ProductForm extends HTMLElement {
             type="number"
             min="0"
             required
-            value="${p.stock}"
+            value="${p.stock !== undefined && p.stock !== null ? p.stock : 0}"
             class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
           />
         </div>
@@ -168,7 +173,7 @@ export class ProductForm extends HTMLElement {
             type="checkbox"
             name="isActive"
             id="is-active-chk"
-            ${p.isActive ? 'checked' : ''}
+            ${p.isActive !== false ? 'checked' : ''}
             class="rounded border-slate-300 text-slate-900 focus:ring-slate-900 w-4 h-4 accent-slate-900 cursor-pointer"
           />
           <label for="is-active-chk" class="text-xs font-medium text-slate-700 cursor-pointer select-none">
@@ -314,7 +319,8 @@ export class ProductForm extends HTMLElement {
 
       try {
         if (isEdit) {
-          await inventoryService.updateProduct(this.editingProduct.id, data);
+          const prodId = this.editingProduct.id || this.editingProduct.barcode;
+          await inventoryService.updateProduct(prodId, data);
           showToast(`Updated "${data.name}"`, 'success');
         } else {
           await inventoryService.addProduct(data);

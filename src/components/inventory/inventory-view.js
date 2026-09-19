@@ -3,6 +3,10 @@ import { formatCurrency, formatDateTime } from '../../utils/formatters.js';
 import { ICONS, escapeHtml, showToast, confirmDialog } from '../../utils/dom.js';
 import '../common/barcode-scanner-modal.js';
 import '../common/price-checker-modal.js';
+import '../common/data-table.js';
+import '../common/app-modal.js';
+import './product-form.js';
+import './stock-adjust.js';
 
 export class InventoryView extends HTMLElement {
   constructor() {
@@ -97,6 +101,61 @@ export class InventoryView extends HTMLElement {
         this.updateTableData();
       });
     }
+
+    const table = this.querySelector('data-table');
+    if (table) {
+      table.addEventListener('click', async (e) => {
+        const adjustBtn = e.target.closest('[data-action="adjust"]');
+        const deleteBtn = e.target.closest('[data-action="delete"]');
+        const editBtn = e.target.closest('[data-action="edit"]');
+        const row = e.target.closest('tr[data-row-id], tr');
+        const rowActions = e.target.closest('[data-row-actions]');
+
+        const prodId = rowActions?.getAttribute('data-row-actions') || row?.getAttribute('data-row-id');
+        const product = prodId ? this.products.find(p => String(p.id) === String(prodId) || String(p.barcode) === String(prodId)) : null;
+
+        if (adjustBtn) {
+          e.stopPropagation();
+          if (product) {
+            const adjustComponent = this.querySelector('stock-adjust');
+            if (adjustComponent) adjustComponent.open(product);
+          }
+          return;
+        }
+
+        if (deleteBtn) {
+          e.stopPropagation();
+          if (product) {
+            const confirmed = await confirmDialog({
+              title: 'Delete Product',
+              message: `Are you sure you want to delete product "${product.name}"? This action cannot be undone.`,
+              confirmText: 'Delete',
+              cancelText: 'Cancel',
+              isDestructive: true,
+            });
+            if (confirmed) {
+              await inventoryService.deleteProduct(product.id || prodId);
+              showToast(`Deleted "${product.name}"`, 'info');
+            }
+          }
+          return;
+        }
+
+        if (editBtn) {
+          e.stopPropagation();
+          if (product) {
+            const form = this.querySelector('product-form');
+            if (form) form.open(product);
+          }
+          return;
+        }
+
+        if (row && product && !e.target.closest('button, a, input, select, th')) {
+          const form = this.querySelector('product-form');
+          if (form) form.open(product);
+        }
+      });
+    }
   }
 
   updateMetrics() {
@@ -152,7 +211,6 @@ export class InventoryView extends HTMLElement {
 
     const filtered = this.getFilteredProducts();
     table.setData(filtered);
-    this.attachTableRowActions();
   }
 
   updateView() {
@@ -248,15 +306,15 @@ export class InventoryView extends HTMLElement {
         label: 'Actions',
         sortable: false,
         render: (row) => `
-          <div class="flex items-center gap-1.5" data-row-actions="${row.id}">
-            <button data-action="adjust" class="px-2 py-1.5 rounded-md bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 shadow-2xs transition-colors flex items-center gap-1 cursor-pointer active:scale-95" title="Adjust Stock">
+          <div class="flex items-center gap-1.5" data-row-actions="${escapeHtml(row.id || row.barcode)}">
+            <button type="button" data-action="adjust" class="px-2 py-1.5 rounded-md bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 shadow-2xs transition-colors flex items-center gap-1 cursor-pointer active:scale-95" title="Adjust Stock">
               <span>${ICONS.adjust}</span>
               <span class="hidden sm:inline">Stock</span>
             </button>
-            <button data-action="edit" class="px-2 py-1.5 rounded-md bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 shadow-2xs transition-colors cursor-pointer active:scale-95" title="Edit Item">
+            <button type="button" data-action="edit" class="px-2 py-1.5 rounded-md bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200 shadow-2xs transition-colors cursor-pointer active:scale-95" title="Edit Item">
               Edit
             </button>
-            <button data-action="delete" class="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer active:scale-95" title="Delete Item">
+            <button type="button" data-action="delete" class="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer active:scale-95" title="Delete Item">
               ${ICONS.trash}
             </button>
           </div>
@@ -267,52 +325,7 @@ export class InventoryView extends HTMLElement {
     table.setConfig(columns, this.getFilteredProducts());
   }
 
-  attachTableRowActions() {
-    setTimeout(() => {
-      this.querySelectorAll('[data-row-actions]').forEach(actionsContainer => {
-        const prodId = actionsContainer.getAttribute('data-row-actions');
-        const product = this.products.find(p => p.id === prodId);
-        if (!product) return;
-
-        const adjustBtn = actionsContainer.querySelector('[data-action="adjust"]');
-        const editBtn = actionsContainer.querySelector('[data-action="edit"]');
-        const deleteBtn = actionsContainer.querySelector('[data-action="delete"]');
-
-        if (adjustBtn) {
-          adjustBtn.onclick = (e) => {
-            e.stopPropagation();
-            const adjustComponent = this.querySelector('stock-adjust');
-            if (adjustComponent) adjustComponent.open(product);
-          };
-        }
-
-        if (editBtn) {
-          editBtn.onclick = (e) => {
-            e.stopPropagation();
-            const form = this.querySelector('product-form');
-            if (form) form.open(product);
-          };
-        }
-
-        if (deleteBtn) {
-          deleteBtn.onclick = async (e) => {
-            e.stopPropagation();
-            const confirmed = await confirmDialog({
-              title: 'Delete Product',
-              message: `Are you sure you want to delete product "${product.name}"? This action cannot be undone.`,
-              confirmText: 'Delete',
-              cancelText: 'Cancel',
-              isDestructive: true,
-            });
-            if (confirmed) {
-              await inventoryService.deleteProduct(product.id);
-              showToast(`Deleted "${product.name}"`, 'info');
-            }
-          };
-        }
-      });
-    }, 50);
-  }
+  attachTableRowActions() {}
 
   async showAuditLogsModal() {
     const modal = this.querySelector('#audit-logs-modal');
