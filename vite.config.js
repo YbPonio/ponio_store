@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
       open: false,
       allowedHosts: [
         'macos.tail266e58.ts.net',
+        'ponio-store.pages.dev'
       ],
       proxy: {
         '/api/barcodelookup': {
