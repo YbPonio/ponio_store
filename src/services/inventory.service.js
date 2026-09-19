@@ -3,6 +3,7 @@ import {
   collection,
   doc,
   getDocs,
+  getDocsFromCache,
   getDoc,
   setDoc,
   addDoc,
@@ -24,6 +25,7 @@ class InventoryService {
   constructor() {
     this.subscribers = new Set();
     this.unsubscribeFirestore = null;
+    this.cachedProducts = null;
 
     if (!db) {
       this._initLocalStorage();
@@ -64,6 +66,7 @@ class InventoryService {
   }
 
   _saveLocalProducts(products) {
+    this.cachedProducts = products;
     localStorage.setItem(LOCAL_PRODUCTS_KEY, JSON.stringify(products));
     this._notifySubscribers(products);
   }
@@ -90,6 +93,10 @@ class InventoryService {
   subscribeProducts(callback) {
     this.subscribers.add(callback);
 
+    if (this.cachedProducts && this.cachedProducts.length > 0) {
+      callback(this.cachedProducts);
+    }
+
     if (db) {
       try {
         const q = query(collection(db, 'products'), orderBy('name'));
@@ -98,6 +105,8 @@ class InventoryService {
             id: doc.id,
             ...doc.data()
           }));
+          this.cachedProducts = products;
+          this._saveLocalProducts(products);
           callback(products);
         }, (err) => {
           console.error('[InventoryService] Firestore snapshot error, falling back to local cache', err);
@@ -118,17 +127,36 @@ class InventoryService {
     };
   }
 
-  async getProducts() {
+  async getProducts(forceRefresh = false) {
+    if (!forceRefresh && this.cachedProducts && this.cachedProducts.length > 0) {
+      return this.cachedProducts;
+    }
+
     if (db) {
       try {
         const q = query(collection(db, 'products'), orderBy('name'));
+        if (!forceRefresh) {
+          try {
+            const cachedSnap = await getDocsFromCache(q);
+            if (!cachedSnap.empty) {
+              const products = cachedSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+              this.cachedProducts = products;
+              return products;
+            }
+          } catch {}
+        }
+
         const snapshot = await getDocs(q);
         if (!snapshot.empty) {
-          return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          const products = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          this.cachedProducts = products;
+          return products;
         }
         await this._seedFirestore();
         const seededSnapshot = await getDocs(q);
-        return seededSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        const products = seededSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        this.cachedProducts = products;
+        return products;
       } catch (err) {
         console.warn('[InventoryService] Error getting products from Firestore. Using local fallback.', err);
       }

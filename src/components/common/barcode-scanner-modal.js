@@ -38,7 +38,7 @@ export class BarcodeScannerModal extends HTMLElement {
 
   render() {
     this.innerHTML = `
-      <dialog class="m-auto w-[88vw] max-w-[440px] rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-2xl overflow-hidden p-0 select-none">
+      <dialog class="m-auto w-[88vw] sm:w-[440px] max-w-[440px] rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-2xl overflow-hidden p-0 select-none" style="max-width: 440px;">
         <div class="flex flex-col max-h-[90dvh]">
           <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50 shrink-0">
             <div>
@@ -50,12 +50,12 @@ export class BarcodeScannerModal extends HTMLElement {
             </button>
           </div>
 
-          <div class="p-4 flex flex-col space-y-3 bg-white">
-            <div id="scanner-viewport-wrapper" class="relative w-full aspect-4/3 bg-slate-950 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200">
+          <div class="p-4 flex flex-col space-y-3 bg-white overflow-y-auto">
+            <div id="scanner-viewport-wrapper" class="relative w-full aspect-4/3 max-h-[260px] bg-slate-950 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200">
               <div id="barcode-reader-viewport" class="w-full h-full"></div>
 
-              <div id="scanner-reticle" class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-6">
-                <div class="w-48 h-32 border-2 border-dashed border-emerald-400 rounded-lg relative">
+              <div id="scanner-reticle" class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-4">
+                <div class="w-52 h-32 border-2 border-dashed border-emerald-400 rounded-lg relative">
                   <div class="absolute inset-x-0 top-1/2 h-0.5 bg-emerald-400/80 shadow-xs animate-pulse"></div>
                 </div>
               </div>

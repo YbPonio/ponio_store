@@ -109,6 +109,7 @@ export function confirmDialog({
 
     const dialog = document.createElement('dialog');
     dialog.className = 'm-auto w-[84vw] max-w-[340px] rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-2xl p-0 select-none';
+    dialog.style.maxWidth = '340px';
 
     dialog.innerHTML = `
       <div class="flex flex-col p-4 sm:p-5 bg-white">

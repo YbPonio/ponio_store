@@ -16,7 +16,7 @@ export class AppModal extends HTMLElement {
 
   render() {
     this.innerHTML = `
-      <dialog class="m-auto w-[88vw] max-w-[460px] rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-2xl overflow-hidden p-0 select-none">
+      <dialog class="m-auto w-[88vw] max-w-[460px] rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-2xl overflow-hidden p-0 select-none" style="max-width: 460px;">
         <div class="flex flex-col max-h-[90dvh]">
           <div class="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-200 bg-slate-50 shrink-0">
             <div>
@@ -86,6 +86,12 @@ export class AppModal extends HTMLElement {
     ];
     this.dialog.classList.remove(...allWidthClasses);
     this.dialog.classList.add(targetClass);
+    const pixelMatch = targetClass.match(/\[(.*?)\]/);
+    if (pixelMatch) {
+      this.dialog.style.maxWidth = pixelMatch[1];
+    } else {
+      this.dialog.style.maxWidth = '';
+    }
 
     this.bodyEl.innerHTML = '';
     if (typeof content === 'string') {

@@ -4,6 +4,8 @@ import {
   doc,
   getDocs,
   getDoc,
+  getDocsFromCache,
+  getDocFromCache,
   setDoc,
   updateDoc,
   onSnapshot
@@ -43,6 +45,7 @@ const INITIAL_USERS = [
 class UsersService {
   constructor() {
     this.listeners = new Set();
+    this.cachedUsers = null;
     this.initLocalStore();
   }
 
@@ -86,6 +89,7 @@ class UsersService {
   }
 
   saveLocalUsers(users) {
+    this.cachedUsers = users;
     try {
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
@@ -113,10 +117,29 @@ class UsersService {
     }
   }
 
-  async getUsers() {
+  async getUsers(forceRefresh = false) {
+    if (!forceRefresh && this.cachedUsers && this.cachedUsers.length > 0) {
+      return this.cachedUsers;
+    }
+
     if (db) {
       try {
-        const snapshot = await getDocs(collection(db, 'users'));
+        const colRef = collection(db, 'users');
+        if (!forceRefresh) {
+          try {
+            const cachedSnap = await getDocsFromCache(colRef);
+            if (!cachedSnap.empty) {
+              const list = [];
+              cachedSnap.forEach(docSnap => {
+                list.push({ id: docSnap.id, ...docSnap.data() });
+              });
+              this.cachedUsers = list;
+              return list;
+            }
+          } catch {}
+        }
+
+        const snapshot = await getDocs(colRef);
         if (!snapshot.empty) {
           const list = [];
           snapshot.forEach(docSnap => {
@@ -127,9 +150,11 @@ class UsersService {
             await this.seedAdminInFirestore();
             list.unshift(INITIAL_ADMIN);
           }
+          this.cachedUsers = list;
           return list;
         } else {
           await this.seedAdminInFirestore();
+          this.cachedUsers = [INITIAL_ADMIN];
           return [INITIAL_ADMIN];
         }
       } catch (err) {
@@ -142,9 +167,22 @@ class UsersService {
   async getUserProfile(uid) {
     if (!uid) return null;
 
+    if (this.cachedUsers) {
+      const match = this.cachedUsers.find(u => u.id === uid);
+      if (match) return match;
+    }
+
     if (db) {
       try {
-        const docSnap = await getDoc(doc(db, 'users', uid));
+        const docRef = doc(db, 'users', uid);
+        try {
+          const cachedSnap = await getDocFromCache(docRef);
+          if (cachedSnap.exists()) {
+            return { id: cachedSnap.id, ...cachedSnap.data() };
+          }
+        } catch {}
+
+        const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           return { id: docSnap.id, ...docSnap.data() };
         }

@@ -18,7 +18,7 @@ export class PriceCheckerModal extends HTMLElement {
 
   render() {
     this.innerHTML = `
-      <dialog id="price-checker-dialog" class="m-auto w-[88vw] max-w-[420px] rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-2xl overflow-hidden p-0 select-none">
+      <dialog id="price-checker-dialog" class="m-auto w-[88vw] sm:w-[420px] max-w-[420px] rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-2xl overflow-hidden p-0 select-none" style="max-width: 420px;">
         <div class="flex flex-col max-h-[90dvh]">
           <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50 shrink-0">
             <div>

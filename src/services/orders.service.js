@@ -4,6 +4,8 @@ import {
   doc,
   getDocs,
   getDoc,
+  getDocsFromCache,
+  getDocFromCache,
   addDoc,
   runTransaction,
   serverTimestamp,
@@ -18,6 +20,7 @@ const LOCAL_ORDERS_KEY = 'ponio_pos_orders_v1';
 
 class OrdersService {
   constructor() {
+    this.cachedOrders = null;
     this._initLocalOrders();
   }
 
@@ -50,6 +53,7 @@ class OrdersService {
   }
 
   _saveLocalOrders(orders) {
+    this.cachedOrders = orders;
     localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(orders));
   }
 
@@ -193,13 +197,30 @@ class OrdersService {
     return createdOrder;
   }
 
-  async getOrders() {
+  async getOrders(forceRefresh = false) {
+    if (!forceRefresh && this.cachedOrders && this.cachedOrders.length > 0) {
+      return this.cachedOrders;
+    }
+
     if (db) {
       try {
         const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+        if (!forceRefresh) {
+          try {
+            const cachedSnap = await getDocsFromCache(q);
+            if (!cachedSnap.empty) {
+              const orders = cachedSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+              this.cachedOrders = orders;
+              return orders;
+            }
+          } catch {}
+        }
+
         const snapshot = await getDocs(q);
         if (!snapshot.empty) {
-          return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          const orders = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          this.cachedOrders = orders;
+          return orders;
         }
       } catch (err) {
         console.warn('[OrdersService] Error getting orders from Firestore, using local fallback', err);
@@ -210,9 +231,22 @@ class OrdersService {
   }
 
   async getOrderById(orderId) {
+    if (this.cachedOrders) {
+      const match = this.cachedOrders.find(o => o.id === orderId);
+      if (match) return match;
+    }
+
     if (db) {
       try {
-        const docSnap = await getDoc(doc(db, 'orders', orderId));
+        const docRef = doc(db, 'orders', orderId);
+        try {
+          const cachedSnap = await getDocFromCache(docRef);
+          if (cachedSnap.exists()) {
+            return { id: cachedSnap.id, ...cachedSnap.data() };
+          }
+        } catch {}
+
+        const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           return { id: docSnap.id, ...docSnap.data() };
         }

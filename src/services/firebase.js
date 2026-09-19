@@ -2,6 +2,14 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   initializeFirestore,
   getFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  persistentSingleTabManager,
+  CACHE_SIZE_UNLIMITED,
+  getPersistentCacheIndexManager,
+  enablePersistentCacheIndexAutoCreation,
+  getDocFromCache,
+  getDocsFromCache,
   collection,
   doc,
   getDocs,
@@ -56,14 +64,37 @@ if (isConfigValid) {
     const databaseId = env.VITE_FIREBASE_DATABASE_ID || 'ponio-store';
     try {
       db = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager(),
+          cacheSizeBytes: CACHE_SIZE_UNLIMITED
+        }),
         experimentalAutoDetectLongPolling: true,
         ignoreUndefinedProperties: true
       }, databaseId);
     } catch {
-      db = getFirestore(app, databaseId);
+      try {
+        db = initializeFirestore(app, {
+          localCache: persistentLocalCache({
+            tabManager: persistentSingleTabManager(),
+            cacheSizeBytes: CACHE_SIZE_UNLIMITED
+          }),
+          experimentalAutoDetectLongPolling: true,
+          ignoreUndefinedProperties: true
+        }, databaseId);
+      } catch {
+        db = getFirestore(app, databaseId);
+      }
     }
+
+    try {
+      const indexManager = getPersistentCacheIndexManager(db);
+      if (indexManager) {
+        enablePersistentCacheIndexAutoCreation(indexManager);
+      }
+    } catch {}
+
     auth = getAuth(app);
-    console.info('[Firebase] Connected successfully to Cloud Firestore & Auth:', firebaseConfig.projectId);
+    console.info('[Firebase] Connected successfully to Cloud Firestore & Auth with persistent cache:', firebaseConfig.projectId);
   } catch (err) {
     console.warn('[Firebase] Initialization error. Falling back to local store.', err);
     db = null;
@@ -81,6 +112,8 @@ export {
   doc,
   getDocs,
   getDoc,
+  getDocsFromCache,
+  getDocFromCache,
   setDoc,
   addDoc,
   updateDoc,
