@@ -259,7 +259,7 @@ export class InventoryView extends HTMLElement {
       {
         key: 'costPrice',
         label: 'Cost',
-        render: (row) => `<span class="font-mono text-slate-500">${formatCurrency(row.costPrice)}</span>`
+        render: (row) => `<span class="font-mono text-slate-500">${row.costPrice !== null && row.costPrice !== undefined ? formatCurrency(row.costPrice) : '—'}</span>`
       },
       {
         key: 'sellingPrice',

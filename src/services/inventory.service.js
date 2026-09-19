@@ -182,11 +182,13 @@ class InventoryService {
   }
 
   async addProduct(data) {
+    const rawBarcode = data.barcode !== undefined && data.barcode !== null ? String(data.barcode).trim() : null;
+    const rawCost = data.costPrice !== undefined && data.costPrice !== null && data.costPrice !== '' ? Number(data.costPrice) : null;
     const product = {
-      barcode: String(data.barcode || '').trim(),
+      barcode: rawBarcode ? rawBarcode : null,
       name: String(data.name || '').trim(),
       category: String(data.category || 'General').trim(),
-      costPrice: Number(data.costPrice) || 0,
+      costPrice: rawCost !== null && !isNaN(rawCost) ? rawCost : null,
       sellingPrice: Number(data.sellingPrice) || 0,
       stock: Number(data.stock) || 0,
       lowStockThreshold: Number(data.lowStockThreshold) || 10,
@@ -223,6 +225,16 @@ class InventoryService {
   async updateProduct(id, updates) {
     const cleanUpdates = { ...updates, updatedAt: new Date() };
 
+    if ('barcode' in updates) {
+      const rawBarcode = updates.barcode !== undefined && updates.barcode !== null ? String(updates.barcode).trim() : null;
+      cleanUpdates.barcode = rawBarcode ? rawBarcode : null;
+    }
+
+    if ('costPrice' in updates) {
+      const rawCost = updates.costPrice !== undefined && updates.costPrice !== null && updates.costPrice !== '' ? Number(updates.costPrice) : null;
+      cleanUpdates.costPrice = rawCost !== null && !isNaN(rawCost) ? rawCost : null;
+    }
+
     if (db) {
       try {
         const docRef = doc(db, 'products', id);
@@ -237,7 +249,7 @@ class InventoryService {
     }
 
     const products = this._getLocalProducts();
-    const index = products.findIndex(p => p.id === id);
+    const index = products.findIndex(p => p.id === id || (p.barcode && p.barcode === id));
     if (index !== -1) {
       products[index] = { ...products[index], ...cleanUpdates };
       this._saveLocalProducts(products);

@@ -58,7 +58,7 @@ export class ProductForm extends HTMLElement {
 
         <div class="sm:col-span-2">
           <div class="flex items-center justify-between mb-1">
-            <label class="text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Barcode / SKU *</label>
+            <label class="text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Barcode / SKU (Optional)</label>
             <div class="flex items-center gap-1.5">
               <button type="button" id="form-scan-camera-btn" class="px-2 py-0.5 rounded text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors cursor-pointer">
                 Scan Camera
@@ -72,9 +72,8 @@ export class ProductForm extends HTMLElement {
             id="input-barcode"
             name="barcode"
             type="text"
-            required
             value="${escapeHtml(p.barcode || '')}"
-            placeholder="e.g. 480000000001"
+            placeholder="e.g. 480000000001 (Optional)"
             class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
           />
         </div>
@@ -110,16 +109,15 @@ export class ProductForm extends HTMLElement {
         </div>
 
         <div>
-          <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Cost Price (PHP) *</label>
+          <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Cost Price (PHP) (Optional)</label>
           <input
             id="input-cost-price"
             name="costPrice"
             type="number"
             step="0.01"
             min="0"
-            required
             value="${p.costPrice !== '' && p.costPrice !== undefined && p.costPrice !== null ? p.costPrice : ''}"
-            placeholder="0.00"
+            placeholder="0.00 (Optional)"
             class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
           />
         </div>
@@ -212,9 +210,10 @@ export class ProductForm extends HTMLElement {
     const lookupBtn = content.querySelector('#form-lookup-barcode-btn');
 
     const updateMargin = () => {
-      const cost = parseFloat(costInput.value) || 0;
+      const hasCost = costInput.value !== '' && !isNaN(parseFloat(costInput.value));
       const sell = parseFloat(sellInput.value) || 0;
-      if (sell > 0) {
+      if (sell > 0 && hasCost) {
+        const cost = parseFloat(costInput.value);
         const profit = sell - cost;
         const margin = (profit / sell) * 100;
         marginText.textContent = `PHP ${profit.toFixed(2)} (${margin.toFixed(1)}%)`;
@@ -305,11 +304,13 @@ export class ProductForm extends HTMLElement {
       submitBtn.disabled = true;
       submitBtn.textContent = 'Saving...';
 
+      const rawBarcode = (formData.get('barcode') || '').trim();
+      const rawCost = formData.get('costPrice');
       const data = {
         name: formData.get('name'),
-        barcode: formData.get('barcode'),
+        barcode: rawBarcode ? rawBarcode : null,
         category: formData.get('category'),
-        costPrice: parseFloat(formData.get('costPrice')) || 0,
+        costPrice: rawCost !== null && rawCost !== '' && !isNaN(parseFloat(rawCost)) ? parseFloat(rawCost) : null,
         sellingPrice: parseFloat(formData.get('sellingPrice')) || 0,
         stock: parseInt(formData.get('stock'), 10) || 0,
         lowStockThreshold: parseInt(formData.get('lowStockThreshold'), 10) || 10,

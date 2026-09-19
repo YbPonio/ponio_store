@@ -52,4 +52,40 @@ const restored = (await inventoryService.getProducts()).find(p => p.id === targe
 assert.strictEqual(restored.name, originalName);
 assert.strictEqual(restored.sellingPrice, originalSellingPrice);
 
+console.log('Testing Null and Optional Barcode and Cost Price...');
+
+const productWithNulls = await inventoryService.addProduct({
+  name: 'Item Without Barcode Or Cost',
+  barcode: '',
+  costPrice: '',
+  sellingPrice: 45.00,
+  category: 'General',
+  stock: 15
+});
+
+assert.strictEqual(productWithNulls.barcode, null);
+assert.strictEqual(productWithNulls.costPrice, null);
+assert.strictEqual(productWithNulls.sellingPrice, 45.00);
+
+const foundNullProduct = (await inventoryService.getProducts()).find(p => p.id === productWithNulls.id);
+assert(foundNullProduct, 'Item with null barcode and costPrice must exist in inventory');
+assert.strictEqual(foundNullProduct.barcode, null);
+assert.strictEqual(foundNullProduct.costPrice, null);
+
+const updatedToNull = await inventoryService.updateProduct(targetProduct.id, {
+  barcode: null,
+  costPrice: null
+});
+assert.strictEqual(updatedToNull.barcode, null);
+assert.strictEqual(updatedToNull.costPrice, null);
+
+const verifiedNulls = (await inventoryService.getProducts()).find(p => p.id === targetProduct.id);
+assert.strictEqual(verifiedNulls.barcode, null);
+assert.strictEqual(verifiedNulls.costPrice, null);
+
+await inventoryService.updateProduct(targetProduct.id, {
+  barcode: targetProduct.barcode,
+  costPrice: targetProduct.costPrice
+});
+
 console.log('All Inventory Item Edit tests passed successfully!');
