@@ -3,6 +3,7 @@ import { cartStore } from '../../store/cart.store.js';
 import { formatCurrency } from '../../utils/formatters.js';
 import { ICONS, showToast, escapeHtml } from '../../utils/dom.js';
 import './barcode-scanner-modal.js';
+import './image-scanner-modal.js';
 
 export class PriceCheckerModal extends HTMLElement {
   constructor() {
@@ -48,9 +49,16 @@ export class PriceCheckerModal extends HTMLElement {
               <button
                 id="price-checker-scan-btn"
                 type="button"
-                class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-semibold cursor-pointer transition-colors shrink-0"
+                class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-semibold cursor-pointer transition-colors shrink-0"
               >
                 Scan
+              </button>
+              <button
+                id="price-checker-photo-btn"
+                type="button"
+                class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-semibold cursor-pointer transition-colors shrink-0"
+              >
+                Photo Match
               </button>
             </div>
 
@@ -59,14 +67,15 @@ export class PriceCheckerModal extends HTMLElement {
                 <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto mb-2 text-slate-500">
                   ${ICONS.search}
                 </div>
-                <p class="text-xs font-semibold text-slate-600">Scan barcode to check price</p>
-                <p class="text-[11px] text-slate-400 mt-0.5">Click Scan to start camera or enter barcode</p>
+                <p class="text-xs font-semibold text-slate-600">Scan barcode or match photo to check price</p>
+                <p class="text-[11px] text-slate-400 mt-0.5">Click Scan, Photo Match, or enter barcode</p>
               </div>
             </div>
           </div>
         </div>
       </dialog>
       <barcode-scanner-modal id="price-checker-camera-scanner"></barcode-scanner-modal>
+      <image-scanner-modal id="price-checker-image-scanner"></image-scanner-modal>
     `;
 
     this.dialog = this.querySelector('#price-checker-dialog');
@@ -89,6 +98,21 @@ export class PriceCheckerModal extends HTMLElement {
           const input = this.querySelector('#price-checker-input');
           if (input) input.value = barcode;
           this.checkBarcode(barcode);
+        }
+      });
+    }
+
+    const photoBtn = this.querySelector('#price-checker-photo-btn');
+    const imageScanner = this.querySelector('#price-checker-image-scanner');
+    if (photoBtn && imageScanner) {
+      photoBtn.addEventListener('click', () => {
+        imageScanner.open();
+      });
+      imageScanner.addEventListener('add-to-cart', (e) => {
+        if (e.detail?.product) {
+          const input = this.querySelector('#price-checker-input');
+          if (input) input.value = e.detail.product.barcode || e.detail.product.id;
+          this.renderProductCard(e.detail.product);
         }
       });
     }
@@ -176,89 +200,7 @@ export class PriceCheckerModal extends HTMLElement {
     this.currentProduct = product || null;
 
     if (product) {
-      const isOutOfStock = product.stock <= 0;
-      const isLowStock = !isOutOfStock && product.stock <= (product.lowStockThreshold || 10);
-
-      let stockBadgeClass = 'bg-emerald-50 text-emerald-800 border-emerald-200';
-      let stockLabel = `${product.stock} units in stock`;
-
-      if (isOutOfStock) {
-        stockBadgeClass = 'bg-rose-50 text-rose-800 border-rose-200 font-semibold';
-        stockLabel = 'Out of stock';
-      } else if (isLowStock) {
-        stockBadgeClass = 'bg-amber-50 text-amber-800 border-amber-200 font-semibold';
-        stockLabel = `Low stock: ${product.stock} units remaining`;
-      }
-
-      container.innerHTML = `
-        <div class="w-full flex flex-col items-center text-center p-4 rounded-xl bg-slate-50 border border-slate-200">
-          <div class="w-20 h-20 rounded-xl bg-white border border-slate-200 flex items-center justify-center mb-3 shadow-2xs overflow-hidden">
-            ${product.imageUrl ? `
-              <img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" class="w-full h-full object-contain p-1" onerror="this.parentElement.innerHTML='<span class=\\'text-base font-bold text-slate-700\\'>${escapeHtml((product.name || 'P').charAt(0).toUpperCase())}</span>'" />
-            ` : `
-              <span class="text-base font-bold text-slate-700">${escapeHtml((product.name || 'P').charAt(0).toUpperCase())}</span>
-            `}
-          </div>
-
-          <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Selling Price</span>
-          <div class="text-3xl sm:text-4xl font-black font-mono text-slate-900 tracking-tight mb-2">
-            ${formatCurrency(product.sellingPrice)}
-          </div>
-
-          <h4 class="text-sm font-bold text-slate-900 leading-snug max-w-xs mb-1">
-            ${escapeHtml(product.name)}
-          </h4>
-
-          <div class="flex items-center gap-2 text-xs font-mono text-slate-500 mb-2">
-            <span>SKU: ${escapeHtml(product.barcode || product.id)}</span>
-            <span>&bull;</span>
-            <span class="font-sans font-medium text-slate-600">${escapeHtml(product.category || 'General')}</span>
-          </div>
-
-          <div class="w-full text-xs py-1.5 px-3 rounded-lg border text-center ${stockBadgeClass} mb-4">
-            ${stockLabel}
-          </div>
-
-          <div class="flex items-center gap-2 w-full pt-1">
-            <button
-              id="price-checker-scan-again-btn"
-              type="button"
-              class="flex-1 py-2 px-3 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
-            >
-              Scan Another
-            </button>
-            <button
-              id="price-checker-add-cart-btn"
-              type="button"
-              class="flex-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer ${isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''}"
-              ${isOutOfStock ? 'disabled' : ''}
-            >
-              Add to Cart
-            </button>
-          </div>
-        </div>
-      `;
-
-      const scanAgainBtn = container.querySelector('#price-checker-scan-again-btn');
-      if (scanAgainBtn) {
-        scanAgainBtn.addEventListener('click', () => {
-          const scanner = this.querySelector('#price-checker-camera-scanner');
-          if (scanner) scanner.open();
-        });
-      }
-
-      const addCartBtn = container.querySelector('#price-checker-add-cart-btn');
-      if (addCartBtn && !isOutOfStock) {
-        addCartBtn.addEventListener('click', () => {
-          const added = cartStore.addItem(product, 1);
-          if (added) {
-            showToast(`Added "${product.name}" to cart`, 'success');
-            this.close();
-          } else {
-            showToast(`Cannot add "${product.name}". Max stock reached!`, 'warning');
-          }
-        });
-      }
+      this.renderProductCard(product);
     } else {
       container.innerHTML = `
         <div class="w-full flex flex-col items-center text-center p-5 rounded-xl bg-slate-50 border border-slate-200">
@@ -315,6 +257,96 @@ export class PriceCheckerModal extends HTMLElement {
           }
         });
       }
+    }
+  }
+
+  renderProductCard(product) {
+    this.currentProduct = product;
+    const container = this.querySelector('#price-checker-result-container');
+    if (!container) return;
+
+    const isOutOfStock = product.stock <= 0;
+    const isLowStock = !isOutOfStock && product.stock <= (product.lowStockThreshold || 10);
+
+    let stockBadgeClass = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+    let stockLabel = `${product.stock} units in stock`;
+
+    if (isOutOfStock) {
+      stockBadgeClass = 'bg-rose-50 text-rose-800 border-rose-200 font-semibold';
+      stockLabel = 'Out of stock';
+    } else if (isLowStock) {
+      stockBadgeClass = 'bg-amber-50 text-amber-800 border-amber-200 font-semibold';
+      stockLabel = `Low stock: ${product.stock} units remaining`;
+    }
+
+    container.innerHTML = `
+      <div class="w-full flex flex-col items-center text-center p-4 rounded-xl bg-slate-50 border border-slate-200">
+        <div class="w-20 h-20 rounded-xl bg-white border border-slate-200 flex items-center justify-center mb-3 shadow-2xs overflow-hidden">
+          ${product.imageUrl ? `
+            <img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" class="w-full h-full object-contain p-1" onerror="this.parentElement.innerHTML='<span class=\\'text-base font-bold text-slate-700\\'>${escapeHtml((product.name || 'P').charAt(0).toUpperCase())}</span>'" />
+          ` : `
+            <span class="text-base font-bold text-slate-700">${escapeHtml((product.name || 'P').charAt(0).toUpperCase())}</span>
+          `}
+        </div>
+
+        <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Selling Price</span>
+        <div class="text-3xl sm:text-4xl font-black font-mono text-slate-900 tracking-tight mb-2">
+          ${formatCurrency(product.sellingPrice)}
+        </div>
+
+        <h4 class="text-sm font-bold text-slate-900 leading-snug max-w-xs mb-1">
+          ${escapeHtml(product.name)}
+        </h4>
+
+        <div class="flex items-center gap-2 text-xs font-mono text-slate-500 mb-2">
+          <span>SKU: ${escapeHtml(product.barcode || product.id)}</span>
+          <span>&bull;</span>
+          <span class="font-sans font-medium text-slate-600">${escapeHtml(product.category || 'General')}</span>
+        </div>
+
+        <div class="w-full text-xs py-1.5 px-3 rounded-lg border text-center ${stockBadgeClass} mb-4">
+          ${stockLabel}
+        </div>
+
+        <div class="flex items-center gap-2 w-full pt-1">
+          <button
+            id="price-checker-scan-again-btn"
+            type="button"
+            class="flex-1 py-2 px-3 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+          >
+            Scan Another
+          </button>
+          <button
+            id="price-checker-add-cart-btn"
+            type="button"
+            class="flex-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer ${isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''}"
+            ${isOutOfStock ? 'disabled' : ''}
+          >
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    `;
+
+    const scanAgainBtn = container.querySelector('#price-checker-scan-again-btn');
+    if (scanAgainBtn) {
+      scanAgainBtn.addEventListener('click', () => {
+        const scanner = this.querySelector('#price-checker-camera-scanner');
+        if (scanner) scanner.open();
+      });
+    }
+
+    const addCartBtn = container.querySelector('#price-checker-add-cart-btn');
+    if (addCartBtn && !isOutOfStock) {
+      addCartBtn.addEventListener('click', () => {
+        const added = cartStore.addItem(product, 1);
+        if (added) {
+          showToast(`Added "${product.name}" to cart`, 'success');
+          this.close();
+        } else {
+          showToast(`Cannot add "${product.name}". Max stock reached!`, 'warning');
+        }
+      });
     }
   }
 }

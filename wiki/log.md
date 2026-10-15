@@ -10,3 +10,8 @@ Chronological append-only record of all wiki operations (ingest, query, lint).
 - Created Concepts: [[concepts/llm-wiki-pattern]], [[concepts/rag-vs-llm-wiki]], [[concepts/compounding-knowledge]]
 - Updated: [[index]]
 - Summary: Initialized the LLM wiki architecture, CLI scripts, and schema, and performed the foundational ingest of Andrej Karpathy's LLM Wiki proposal.
+
+## [2026-10-15] ingest | Perceptual Image Recognition Subsystem
+- Created Concepts: [[concepts/perceptual-image-recognition]]
+- Updated: [[index]]
+- Summary: Documented the client-side visual matching engine incorporating dHash, color histograms, and luminance matrices for retail inventory search.

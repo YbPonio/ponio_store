@@ -75,6 +75,14 @@ export class ProductCatalog extends HTMLElement {
         priceChecker.open(true);
       });
     }
+
+    const visualBtn = this.querySelector('#catalog-visual-match-btn');
+    const imageScanner = this.querySelector('#catalog-image-scanner');
+    if (visualBtn && imageScanner) {
+      visualBtn.addEventListener('click', () => {
+        imageScanner.open();
+      });
+    }
   }
 
   getCategories() {
@@ -178,6 +186,15 @@ export class ProductCatalog extends HTMLElement {
           >
             <span>Check Price</span>
           </button>
+
+          <button
+            id="catalog-visual-match-btn"
+            type="button"
+            class="flex items-center gap-1.5 text-xs font-semibold text-slate-900 bg-white hover:bg-slate-100 px-3 py-2 rounded-xl border border-slate-200/90 shadow-2xs transition-all cursor-pointer select-none shrink-0 active:scale-95"
+            title="Visual product match by photo or camera (F7)"
+          >
+            <span>Visual Match</span>
+          </button>
         </div>
 
         <div id="category-pills" class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar scroll-smooth"></div>
@@ -197,6 +214,7 @@ export class ProductCatalog extends HTMLElement {
         </div>
       </div>
       <price-checker-modal id="catalog-price-checker"></price-checker-modal>
+      <image-scanner-modal id="catalog-image-scanner"></image-scanner-modal>
     `;
   }
 }

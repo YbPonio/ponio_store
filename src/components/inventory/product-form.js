@@ -79,7 +79,19 @@ export class ProductForm extends HTMLElement {
         </div>
 
         <div class="sm:col-span-2">
-          <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Product Image URL (Optional)</label>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Product Photo (Optional)</label>
+            <div class="flex items-center gap-1.5">
+              <input type="file" id="form-upload-file-input" accept="image/*" class="hidden" />
+              <input type="file" id="form-camera-snap-input" accept="image/*" capture="environment" class="hidden" />
+              <button type="button" id="form-upload-photo-btn" class="px-2 py-0.5 rounded text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors cursor-pointer">
+                Upload Photo
+              </button>
+              <button type="button" id="form-snap-camera-btn" class="px-2 py-0.5 rounded text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors cursor-pointer">
+                Snap Camera
+              </button>
+            </div>
+          </div>
           <div class="flex items-center gap-2.5">
             <div id="image-preview-box" class="w-14 h-14 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden">
               ${p.imageUrl ? `<img src="${escapeHtml(p.imageUrl)}" alt="Preview" class="w-full h-full object-contain p-1" onerror="this.parentElement.innerHTML='<span class=\\'text-xs text-slate-400 font-bold\\'>No Pic</span>'" />` : `<span class="text-xs text-slate-400 font-bold">No Pic</span>`}
@@ -87,9 +99,9 @@ export class ProductForm extends HTMLElement {
             <input
               id="input-image-url"
               name="imageUrl"
-              type="url"
+              type="text"
               value="${escapeHtml(p.imageUrl || '')}"
-              placeholder="https://images.barcodelookup.com/... or image URL"
+              placeholder="https://... or photo data URL"
               class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
             />
           </div>
@@ -238,6 +250,41 @@ export class ProductForm extends HTMLElement {
     updateMargin();
 
     imageInput.addEventListener('input', () => updateImagePreview(imageInput.value));
+
+    const uploadBtn = content.querySelector('#form-upload-photo-btn');
+    const uploadInput = content.querySelector('#form-upload-file-input');
+    const snapBtn = content.querySelector('#form-snap-camera-btn');
+    const snapInput = content.querySelector('#form-camera-snap-input');
+
+    const handleFileChosen = (file) => {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        imageInput.value = dataUrl;
+        updateImagePreview(dataUrl);
+        showToast('Product photo loaded', 'success');
+      };
+      reader.readAsDataURL(file);
+    };
+
+    if (uploadBtn && uploadInput) {
+      uploadBtn.addEventListener('click', () => uploadInput.click());
+      uploadInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          handleFileChosen(e.target.files[0]);
+        }
+      });
+    }
+
+    if (snapBtn && snapInput) {
+      snapBtn.addEventListener('click', () => snapInput.click());
+      snapInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          handleFileChosen(e.target.files[0]);
+        }
+      });
+    }
 
     if (scanBtn) {
       scanBtn.addEventListener('click', () => {

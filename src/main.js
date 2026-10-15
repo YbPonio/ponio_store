@@ -14,6 +14,7 @@ import './components/auth/auth-view.js';
 import './components/common/app-header.js';
 import './components/common/app-modal.js';
 import './components/common/barcode-scanner-modal.js';
+import './components/common/image-scanner-modal.js';
 import './components/common/price-checker-modal.js';
 import './components/common/data-table.js';
 
@@ -46,6 +47,14 @@ window.addEventListener('keydown', (e) => {
     const priceChecker = document.querySelector('price-checker-modal');
     if (priceChecker) {
       priceChecker.open(true);
+    }
+  }
+
+  if (e.key === 'F7') {
+    e.preventDefault();
+    const imageScanner = document.querySelector('image-scanner-modal');
+    if (imageScanner) {
+      imageScanner.open();
     }
   }
 

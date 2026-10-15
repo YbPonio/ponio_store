@@ -36,6 +36,22 @@ class InventoryService {
     const existing = localStorage.getItem(LOCAL_PRODUCTS_KEY);
     if (!existing) {
       localStorage.setItem(LOCAL_PRODUCTS_KEY, JSON.stringify(INITIAL_SEED_PRODUCTS));
+    } else {
+      try {
+        const parsed = JSON.parse(existing);
+        let updated = false;
+        const seedMap = new Map(INITIAL_SEED_PRODUCTS.map(p => [p.id, p.imageUrl]));
+        const enriched = parsed.map(p => {
+          if (!p.imageUrl && seedMap.has(p.id)) {
+            updated = true;
+            return { ...p, imageUrl: seedMap.get(p.id) };
+          }
+          return p;
+        });
+        if (updated) {
+          localStorage.setItem(LOCAL_PRODUCTS_KEY, JSON.stringify(enriched));
+        }
+      } catch {}
     }
     const existingLogs = localStorage.getItem(LOCAL_LOGS_KEY);
     if (!existingLogs) {

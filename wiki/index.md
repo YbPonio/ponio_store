@@ -23,6 +23,7 @@ The master catalog of compiled knowledge. Consult this index before answering qu
 - [[concepts/llm-wiki-pattern]]: Persistent three-layer architecture decoupling knowledge compilation from query execution.
 - [[concepts/rag-vs-llm-wiki]]: Comparative analysis between ephemeral retrieval systems and persistent compiled wikis.
 - [[concepts/compounding-knowledge]]: Mechanisms for non-linear knowledge growth, cross-referencing, and bookkeeping automation.
+- [[concepts/perceptual-image-recognition]]: Real-time client-side visual product matching using dHash, color histograms, and luminance matrices.
 
 ---
 

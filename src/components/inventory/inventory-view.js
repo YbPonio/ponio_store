@@ -2,6 +2,7 @@ import { inventoryService } from '../../services/inventory.service.js';
 import { formatCurrency, formatDateTime } from '../../utils/formatters.js';
 import { ICONS, escapeHtml, showToast, confirmDialog } from '../../utils/dom.js';
 import '../common/barcode-scanner-modal.js';
+import '../common/image-scanner-modal.js';
 import '../common/price-checker-modal.js';
 import '../common/data-table.js';
 import '../common/app-modal.js';
@@ -60,6 +61,21 @@ export class InventoryView extends HTMLElement {
     if (priceBtn && priceChecker) {
       priceBtn.addEventListener('click', () => {
         priceChecker.open(true);
+      });
+    }
+
+    const visualBtn = this.querySelector('#inventory-visual-match-btn');
+    const visualScanner = this.querySelector('#inventory-visual-scanner');
+    if (visualBtn && visualScanner) {
+      visualBtn.addEventListener('click', () => {
+        visualScanner.open();
+      });
+      visualScanner.addEventListener('add-to-cart', (e) => {
+        const prod = e.detail?.product;
+        if (prod) {
+          const form = this.querySelector('product-form');
+          if (form) form.open(prod);
+        }
       });
     }
 
@@ -404,6 +420,9 @@ export class InventoryView extends HTMLElement {
           <button id="inventory-check-price-btn" class="flex-1 sm:flex-initial py-2 sm:py-1.5 px-3 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer">
             <span>Check Price</span>
           </button>
+          <button id="inventory-visual-match-btn" class="flex-1 sm:flex-initial py-2 sm:py-1.5 px-3 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer">
+            <span>Visual Match</span>
+          </button>
           <button id="scan-barcode-btn" class="flex-1 sm:flex-initial py-2 sm:py-1.5 px-3 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer">
             <span>Scan Barcode</span>
           </button>
@@ -496,6 +515,7 @@ export class InventoryView extends HTMLElement {
       <stock-adjust></stock-adjust>
       <app-modal id="audit-logs-modal"></app-modal>
       <barcode-scanner-modal id="inventory-barcode-scanner"></barcode-scanner-modal>
+      <image-scanner-modal id="inventory-visual-scanner"></image-scanner-modal>
       <price-checker-modal id="inventory-price-checker"></price-checker-modal>
     `;
   }
