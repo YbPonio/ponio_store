@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "wiki": "node scripts/wiki.mjs"
   },
   "dependencies": {
     "firebase": "^11.4.0",
