@@ -1,4 +1,4 @@
-import { escapeHtml, ICONS } from '../../utils/dom.js';
+import { escapeHtml } from '../../utils/dom.js';
 
 export class DataTable extends HTMLElement {
   constructor() {
@@ -82,16 +82,16 @@ export class DataTable extends HTMLElement {
     const paginated = this.filteredData.slice(start, start + this.pageSize);
 
     this.innerHTML = `
-      <div class="flex flex-col h-full bg-white rounded-xl border border-slate-200/90 overflow-hidden shadow-2xs">
+      <div class="flex flex-col h-full bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
         <div class="overflow-x-auto flex-1 overscroll-x-contain">
           <table class="w-full text-left border-collapse text-xs">
             <thead>
-              <tr class="border-b border-slate-200 bg-slate-50/80 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              <tr class="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 ${this.columns.map(col => `
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4 ${col.sortable !== false ? 'cursor-pointer select-none hover:text-slate-900' : ''}" data-col="${col.key}">
+                  <th class="py-3 px-4 ${col.sortable !== false ? 'cursor-pointer select-none hover:text-slate-900 transition-colors' : ''}" data-col="${col.key}">
                     <div class="flex items-center gap-1.5 whitespace-nowrap">
                       <span>${escapeHtml(col.label)}</span>
-                      ${this.sortKey === col.key ? `<span>${this.sortAsc ? '↑' : '↓'}</span>` : ''}
+                      ${this.sortKey === col.key ? `<span class="text-[10px] font-mono px-1 py-0.2 rounded bg-slate-200 text-slate-700 font-bold">${this.sortAsc ? 'Asc' : 'Desc'}</span>` : ''}
                     </div>
                   </th>
                 `).join('')}
@@ -100,17 +100,18 @@ export class DataTable extends HTMLElement {
             <tbody class="divide-y divide-slate-100 font-normal text-slate-700">
               ${paginated.length === 0 ? `
                 <tr>
-                  <td colspan="${this.columns.length}" class="py-12 text-center text-slate-400">
-                    <div class="flex flex-col items-center justify-center gap-1.5">
-                      <span class="text-slate-400">${ICONS.box}</span>
-                      <p class="text-xs font-medium text-slate-500">No matching records found.</p>
+                  <td colspan="${this.columns.length}" class="py-16 text-center text-slate-400">
+                    <div class="flex flex-col items-center justify-center gap-2">
+                      <span class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-500">0</span>
+                      <p class="text-xs font-bold text-slate-700">No records found</p>
+                      <p class="text-[11px] text-slate-500 max-w-xs">Try adjusting your search query or reset table filters.</p>
                     </div>
                   </td>
                 </tr>
-              ` : paginated.map(row => `
-                <tr class="hover:bg-slate-50/80 transition-colors group cursor-pointer" data-row-id="${escapeHtml(row.id || row.barcode)}">
+              ` : paginated.map((row, idx) => `
+                <tr class="hover:bg-slate-50 transition-colors group cursor-pointer ${idx % 2 === 1 ? 'bg-slate-50/40' : 'bg-white'}" data-row-id="${escapeHtml(row.id || row.barcode)}">
                   ${this.columns.map(col => `
-                    <td class="py-2.5 sm:py-3 px-3 sm:px-4 whitespace-nowrap text-xs">
+                    <td class="py-3 px-4 whitespace-nowrap text-xs">
                       ${col.render ? col.render(row) : escapeHtml(row[col.key] ?? '—')}
                     </td>
                   `).join('')}
@@ -120,16 +121,16 @@ export class DataTable extends HTMLElement {
           </table>
         </div>
 
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-2 px-3 py-2.5 sm:px-4 border-t border-slate-200/80 bg-slate-50/60 text-[11px] text-slate-500 shrink-0 select-none">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-200 bg-slate-50 text-[11px] text-slate-500 shrink-0 select-none">
           <div class="text-center sm:text-left">
-            Showing <span class="font-semibold text-slate-800">${totalItems > 0 ? start + 1 : 0}</span> to <span class="font-semibold text-slate-800">${Math.min(start + this.pageSize, totalItems)}</span> of <span class="font-semibold text-slate-800">${totalItems}</span>
+            Showing <span class="font-bold text-slate-800 tabular-nums">${totalItems > 0 ? start + 1 : 0}</span> to <span class="font-bold text-slate-800 tabular-nums">${Math.min(start + this.pageSize, totalItems)}</span> of <span class="font-bold text-slate-800 tabular-nums">${totalItems}</span> entries
           </div>
-          <div class="flex items-center gap-1.5">
-            <button id="prev-page" class="px-2.5 py-1 rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer font-medium active:scale-95" ${this.currentPage <= 1 ? 'disabled' : ''}>
-              Prev
+          <div class="flex items-center gap-2">
+            <button id="prev-page" class="px-3 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer font-bold active:scale-95 shadow-2xs" ${this.currentPage <= 1 ? 'disabled' : ''}>
+              Previous
             </button>
-            <span class="px-1.5 text-slate-500 text-[11px]">Page <strong class="text-slate-800">${this.currentPage}</strong> / ${totalPages}</span>
-            <button id="next-page" class="px-2.5 py-1 rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer font-medium active:scale-95" ${this.currentPage >= totalPages ? 'disabled' : ''}>
+            <span class="px-2 text-slate-600 font-mono text-[11px]">Page <strong class="text-slate-900">${this.currentPage}</strong> of ${totalPages}</span>
+            <button id="next-page" class="px-3 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer font-bold active:scale-95 shadow-2xs" ${this.currentPage >= totalPages ? 'disabled' : ''}>
               Next
             </button>
           </div>

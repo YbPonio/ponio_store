@@ -1,6 +1,6 @@
 import { inventoryService } from '../../services/inventory.service.js';
 import { authService } from '../../services/auth.service.js';
-import { ICONS, showToast, escapeHtml } from '../../utils/dom.js';
+import { showToast, escapeHtml } from '../../utils/dom.js';
 
 export class StockAdjust extends HTMLElement {
   constructor() {
@@ -19,37 +19,37 @@ export class StockAdjust extends HTMLElement {
 
     const content = document.createElement('form');
     content.id = 'stock-adjust-form';
-    content.className = 'space-y-3.5';
+    content.className = 'space-y-4';
 
     content.innerHTML = `
-      <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+      <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
         <div>
-          <h4 class="text-xs font-semibold text-slate-900">${escapeHtml(product.name)}</h4>
-          <p class="text-[11px] text-slate-500 font-mono">Barcode: ${escapeHtml(product.barcode || product.id)}</p>
+          <h4 class="text-xs font-bold text-slate-900">${escapeHtml(product.name)}</h4>
+          <p class="text-[11px] text-slate-500 font-mono">SKU: ${escapeHtml(product.barcode || product.id)}</p>
         </div>
         <div class="text-right">
-          <div class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Current Stock</div>
-          <div class="text-lg font-black text-slate-900 font-mono">${product.stock}</div>
+          <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Current Stock</div>
+          <div class="text-xl font-black text-slate-900 font-mono tabular-nums">${product.stock} units</div>
         </div>
       </div>
 
       <div>
-        <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Adjustment Type *</label>
-        <div class="grid grid-cols-3 gap-1.5 sm:gap-2" id="adjustment-type-pills">
-          <button type="button" data-type="RESTOCK" data-multiplier="1" class="py-2.5 px-2 rounded-lg border border-slate-900 bg-slate-900 text-white font-semibold text-xs flex items-center justify-center gap-1 cursor-pointer">
-            <span>+</span> Restock
+        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Adjustment Type *</label>
+        <div class="grid grid-cols-3 gap-2" id="adjustment-type-pills">
+          <button type="button" data-type="RESTOCK" data-multiplier="1" class="py-2.5 px-2 rounded-xl border border-slate-900 bg-slate-900 text-white font-bold text-xs flex items-center justify-center gap-1 cursor-pointer">
+            <span>+ Restock</span>
           </button>
-          <button type="button" data-type="DAMAGE" data-multiplier="-1" class="py-2.5 px-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold text-xs flex items-center justify-center gap-1 cursor-pointer">
-            <span>-</span> Damaged
+          <button type="button" data-type="DAMAGE" data-multiplier="-1" class="py-2.5 px-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer">
+            <span>- Damaged</span>
           </button>
-          <button type="button" data-type="ADJUSTMENT" data-multiplier="1" class="py-2.5 px-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold text-xs flex items-center justify-center gap-1 cursor-pointer">
-            <span>&plusmn;</span> Audit Count
+          <button type="button" data-type="ADJUSTMENT" data-multiplier="1" class="py-2.5 px-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer">
+            <span>Audit Count</span>
           </button>
         </div>
       </div>
 
       <div>
-        <label for="adjust-qty-input" class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Quantity to Add/Deduct *</label>
+        <label for="adjust-qty-input" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Quantity to Add/Deduct *</label>
         <input
           id="adjust-qty-input"
           name="quantity"
@@ -57,41 +57,40 @@ export class StockAdjust extends HTMLElement {
           min="1"
           required
           value="10"
-          class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-base sm:text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs"
+          class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-base font-mono font-bold text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 shadow-2xs"
         />
       </div>
 
-      <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
-        <span class="text-slate-500">Projected Stock:</span>
-        <span id="projected-stock-text" class="font-mono font-bold text-slate-900 text-xs">--</span>
+      <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+        <span class="text-slate-500 font-medium">Projected New Balance:</span>
+        <span id="projected-stock-text" class="font-mono font-bold text-slate-900 text-xs tabular-nums">--</span>
       </div>
 
       <div>
-        <label for="adjust-reason-input" class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Audit Note / Reason *</label>
+        <label for="adjust-reason-input" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Audit Reason / Documentation *</label>
         <input
           id="adjust-reason-input"
           name="reason"
           type="text"
           required
-          placeholder="e.g. Supplier Delivery Batch #48"
-          class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
+          placeholder="e.g. Supplier Restock Delivery Invoice #1024"
+          class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 shadow-2xs font-medium"
         />
       </div>
 
-      <div class="flex items-center gap-2.5 pt-1">
-        <button type="button" id="adjust-cancel-btn" class="flex-1 py-2.5 px-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-all cursor-pointer">
+      <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+        <button type="button" id="adjust-cancel-btn" class="flex-1 py-2.5 px-4 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-bold transition-all cursor-pointer">
           Cancel
         </button>
-        <button type="submit" id="adjust-submit-btn" class="flex-1 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5">
-          <span>${ICONS.check}</span>
+        <button type="submit" id="adjust-submit-btn" class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5">
           <span>Apply Adjustment</span>
         </button>
       </div>
     `;
 
     modal.open({
-      title: 'Adjust Stock & Log Audit',
-      subtitle: `Item: ${product.name}`,
+      title: 'Stock Adjustment & Audit',
+      subtitle: `SKU: ${product.barcode || product.id}`,
       content,
       maxWidth: 'max-w-md',
     });
@@ -113,9 +112,9 @@ export class StockAdjust extends HTMLElement {
     content.querySelectorAll('#adjustment-type-pills button').forEach(btn => {
       btn.addEventListener('click', () => {
         content.querySelectorAll('#adjustment-type-pills button').forEach(b => {
-          b.className = 'py-2.5 px-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold text-xs flex items-center justify-center gap-1 cursor-pointer';
+          b.className = 'py-2.5 px-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer';
         });
-        btn.className = 'py-2.5 px-2 rounded-lg border border-slate-900 bg-slate-900 text-white font-semibold text-xs flex items-center justify-center gap-1 cursor-pointer';
+        btn.className = 'py-2.5 px-2 rounded-xl border border-slate-900 bg-slate-900 text-white font-bold text-xs flex items-center justify-center gap-1 cursor-pointer';
 
         currentType = btn.getAttribute('data-type');
         multiplier = parseInt(btn.getAttribute('data-multiplier'), 10);

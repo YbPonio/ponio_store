@@ -1,18 +1,13 @@
 export function formatCurrency(amount) {
   const num = Number(amount) || 0;
-  return new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
+  return `PHP ${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export function formatDateTime(timestamp) {
-  if (!timestamp) return '—';
+  if (!timestamp) return '-';
   const date = parseDate(timestamp);
-  if (isNaN(date.getTime())) return '—';
-  return new Intl.DateTimeFormat('en-PH', {
+  if (isNaN(date.getTime())) return '-';
+  return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -23,10 +18,10 @@ export function formatDateTime(timestamp) {
 }
 
 export function formatDate(timestamp) {
-  if (!timestamp) return '—';
+  if (!timestamp) return '-';
   const date = parseDate(timestamp);
-  if (isNaN(date.getTime())) return '—';
-  return new Intl.DateTimeFormat('en-PH', {
+  if (isNaN(date.getTime())) return '-';
+  return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

@@ -1,6 +1,6 @@
 import { usersService } from '../../services/users.service.js';
 import { authService } from '../../services/auth.service.js';
-import { ICONS, showToast, escapeHtml, confirmDialog } from '../../utils/dom.js';
+import { showToast, escapeHtml, confirmDialog } from '../../utils/dom.js';
 
 export class UserManagementView extends HTMLElement {
   constructor() {
@@ -26,15 +26,15 @@ export class UserManagementView extends HTMLElement {
   }
 
   renderAccessDenied() {
-    this.className = 'w-full h-full flex flex-col items-center justify-center bg-slate-50 p-6';
+    this.className = 'w-full h-full flex flex-col items-center justify-center bg-slate-100/70 p-6';
     this.innerHTML = `
-      <div class="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-6 text-center shadow-xs">
-        <div class="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-3">
-          ${ICONS.lock}
+      <div class="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-xs">
+        <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-3 font-bold text-xs border border-rose-200">
+          LOCK
         </div>
-        <h2 class="text-base font-bold text-slate-900">Administrator Access Required</h2>
-        <p class="text-xs text-slate-500 mt-1 mb-4">You do not have permission to view or manage user accounts. Only users with the ADMIN role can access this section.</p>
-        <button id="return-pos-btn" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-all cursor-pointer">
+        <h2 class="text-base font-black text-slate-900">Administrator Access Required</h2>
+        <p class="text-xs text-slate-500 mt-1 mb-5 leading-relaxed">You do not have permission to view or manage user accounts. Only users with the ADMIN role can access staff administration.</p>
+        <button id="return-pos-btn" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all cursor-pointer shadow-xs">
           Return to Register
         </button>
       </div>
@@ -69,8 +69,8 @@ export class UserManagementView extends HTMLElement {
         filterTabs.forEach((t) => {
           const isSelected = t === tab;
           t.className = isSelected
-            ? 'user-status-tab px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white shadow-2xs cursor-pointer transition-all'
-            : 'user-status-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition-all';
+            ? 'user-status-tab px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white shadow-xs cursor-pointer transition-all'
+            : 'user-status-tab px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition-all';
         });
         this.updateUserList();
       });
@@ -90,22 +90,23 @@ export class UserManagementView extends HTMLElement {
   }
 
   attachRowActionListeners() {
-    const adminUser = authService.getCurrentUser();
-
     this.querySelectorAll('.btn-approve-user').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const uid = btn.getAttribute('data-uid');
         const name = btn.getAttribute('data-name');
         const roleSelect = this.querySelector(`select[data-uid="${uid}"]`);
         const chosenRole = roleSelect && roleSelect.value !== 'NONE' ? roleSelect.value : 'CASHIER';
+
         try {
           btn.disabled = true;
-          await usersService.approveUser(uid, adminUser?.id || 'admin', chosenRole);
-          showToast(`Approved access for ${name} as ${chosenRole}`, 'success');
+          btn.textContent = 'Approving...';
+          await usersService.approveUser(uid, chosenRole);
+          showToast(`Account approved for ${name} as ${chosenRole}`, 'success');
         } catch (err) {
-          console.error('Approve error:', err);
-          showToast('Failed to approve user.', 'error');
+          console.error('Approval error:', err);
+          showToast(err.message || 'Failed to approve user.', 'error');
           btn.disabled = false;
+          btn.textContent = 'Approve';
         }
       });
     });
@@ -114,23 +115,27 @@ export class UserManagementView extends HTMLElement {
       btn.addEventListener('click', async () => {
         const uid = btn.getAttribute('data-uid');
         const name = btn.getAttribute('data-name');
+
         const confirmed = await confirmDialog({
-          title: 'Reject User Access',
-          message: `Reject access for ${name}? They will be blocked from using the POS system.`,
-          confirmText: 'Reject Access',
+          title: 'Revoke User Access',
+          message: `Are you sure you want to revoke access for ${name}? They will be blocked from accessing the POS.`,
+          confirmText: 'Revoke Access',
           cancelText: 'Cancel',
           isDestructive: true,
         });
-        if (confirmed) {
-          try {
-            btn.disabled = true;
-            await usersService.rejectUser(uid, adminUser?.id || 'admin');
-            showToast(`Access rejected for ${name}`, 'warning');
-          } catch (err) {
-            console.error('Reject error:', err);
-            showToast('Failed to reject user.', 'error');
-            btn.disabled = false;
-          }
+
+        if (!confirmed) return;
+
+        try {
+          btn.disabled = true;
+          btn.textContent = 'Revoking...';
+          await usersService.rejectUser(uid, 'Revoked by admin');
+          showToast(`Access revoked for ${name}`, 'info');
+        } catch (err) {
+          console.error('Revoke error:', err);
+          showToast(err.message || 'Failed to revoke user.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Revoke';
         }
       });
     });
@@ -202,14 +207,14 @@ export class UserManagementView extends HTMLElement {
     if (emptyState) emptyState.classList.add('hidden');
 
     listContainer.innerHTML = filtered
-      .map((user) => {
+      .map((user, idx) => {
         const initial = (user.name || 'U').charAt(0).toUpperCase();
         const status = user.status || 'PENDING';
         const role = user.role || 'CASHIER';
 
         const statusBadgeClasses = {
           PENDING: 'bg-amber-50 text-amber-800 border-amber-200',
-          APPROVED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+          APPROVED: 'bg-emerald-50 text-emerald-800 border-emerald-200',
           REJECTED: 'bg-rose-50 text-rose-700 border-rose-200',
         };
 
@@ -224,10 +229,10 @@ export class UserManagementView extends HTMLElement {
           : 'N/A';
 
         return `
-          <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">
+          <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors ${idx % 2 === 1 ? 'bg-slate-50/40' : 'bg-white'}">
             <td class="py-3 px-4">
               <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center shrink-0">
+                <div class="w-8 h-8 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
                   ${initial}
                 </div>
                 <div class="leading-tight">
@@ -238,57 +243,49 @@ export class UserManagementView extends HTMLElement {
             </td>
 
             <td class="py-3 px-4 text-xs">
-              <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                ${user.provider === 'google.com' ? 'Google' : 'Password'}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold text-slate-600 bg-slate-100 border border-slate-200">
+                ${user.provider === 'google.com' ? 'Google Auth' : 'Password Auth'}
               </span>
             </td>
 
             <td class="py-3 px-4">
               <select
                 data-uid="${user.id}"
-                class="select-user-role text-xs font-semibold rounded-lg bg-white border border-slate-300 py-1 px-2 text-slate-800 focus:outline-none focus:border-slate-900 cursor-pointer"
+                class="select-user-role text-xs font-bold rounded-xl bg-white border border-slate-300 py-1 px-2.5 text-slate-800 focus:outline-none focus:border-emerald-600 shadow-2xs cursor-pointer"
                 ${isCurrentUserAdmin ? 'disabled' : ''}
               >
-                <option value="NONE" ${!role || role === 'NONE' ? 'selected' : ''}>No Role</option>
                 <option value="CASHIER" ${role === 'CASHIER' ? 'selected' : ''}>Cashier</option>
-                <option value="MANAGER" ${role === 'MANAGER' ? 'selected' : ''}>Manager</option>
                 <option value="ADMIN" ${role === 'ADMIN' ? 'selected' : ''}>Admin</option>
               </select>
             </td>
 
-            <td class="py-3 px-4">
-              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusBadgeClasses[status] || statusBadgeClasses.PENDING}">
-                <span class="w-1.5 h-1.5 rounded-full ${
-                  status === 'APPROVED'
-                    ? 'bg-emerald-500'
-                    : status === 'REJECTED'
-                    ? 'bg-rose-500'
-                    : 'bg-amber-500 animate-pulse'
-                }"></span>
+            <td class="py-3 px-4 text-xs">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusBadgeClasses[status] || statusBadgeClasses.PENDING}">
+                <span class="w-1.5 h-1.5 rounded-full ${status === 'APPROVED' ? 'bg-emerald-500' : status === 'REJECTED' ? 'bg-rose-500' : 'bg-amber-500'}"></span>
                 <span>${status}</span>
               </span>
             </td>
 
-            <td class="py-3 px-4 text-[11px] font-medium text-slate-500">
+            <td class="py-3 px-4 text-xs font-mono text-slate-500 tabular-nums">
               ${createdDate}
             </td>
 
             <td class="py-3 px-4 text-right">
-              <div class="inline-flex items-center justify-end gap-1.5">
+              <div class="flex items-center justify-end gap-1.5">
                 ${
                   status === 'PENDING'
                     ? `
                   <button
                     data-uid="${user.id}"
                     data-name="${escapeHtml(user.name)}"
-                    class="btn-approve-user px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer"
+                    class="btn-approve-user px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer"
                   >
                     Approve
                   </button>
                   <button
                     data-uid="${user.id}"
                     data-name="${escapeHtml(user.name)}"
-                    class="btn-reject-user px-2 py-1 rounded-lg border border-slate-300 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-slate-600 font-semibold text-xs transition-all cursor-pointer"
+                    class="btn-reject-user px-3 py-1 rounded-xl border border-slate-300 hover:bg-rose-50 hover:text-rose-700 text-slate-600 font-bold text-xs transition-all cursor-pointer"
                   >
                     Reject
                   </button>
@@ -298,7 +295,7 @@ export class UserManagementView extends HTMLElement {
                   <button
                     data-uid="${user.id}"
                     data-name="${escapeHtml(user.name)}"
-                    class="btn-reject-user px-2 py-1 rounded-lg border border-slate-300 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-slate-600 font-semibold text-xs transition-all cursor-pointer"
+                    class="btn-reject-user px-3 py-1 rounded-xl border border-slate-300 hover:bg-rose-50 hover:text-rose-700 text-slate-600 font-bold text-xs transition-all cursor-pointer"
                     ${isCurrentUserAdmin ? 'disabled title="Cannot reject primary administrator"' : ''}
                   >
                     Revoke
@@ -308,7 +305,7 @@ export class UserManagementView extends HTMLElement {
                   <button
                     data-uid="${user.id}"
                     data-name="${escapeHtml(user.name)}"
-                    class="btn-approve-user px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer"
+                    class="btn-approve-user px-3 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer"
                   >
                     Re-approve
                   </button>
@@ -325,72 +322,72 @@ export class UserManagementView extends HTMLElement {
   }
 
   render() {
-    this.className = 'w-full h-full flex flex-col bg-slate-50 overflow-hidden';
+    this.className = 'w-full h-full flex flex-col bg-slate-100/60 overflow-hidden';
     this.innerHTML = `
-      <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 max-w-7xl mx-auto w-full">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-slate-200">
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 max-w-7xl mx-auto w-full pb-20 md:pb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200">
           <div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">User Management</h1>
-            <p class="text-xs text-slate-500 mt-0.5">Approve incoming registrations, manage permissions, and assign roles</p>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Staff &amp; Access Control</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Approve incoming registrations, manage cashier permissions, and assign roles</p>
           </div>
 
           <div class="flex items-center gap-2">
             <button
               id="users-refresh-btn"
               type="button"
-              class="px-3 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              class="px-3 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
             >
-              <span>${ICONS.refresh}</span>
-              <span>Refresh</span>
+              <span>Refresh Staff</span>
             </button>
           </div>
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div class="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-2xs">
-            <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Users</div>
-            <div id="count-total-users" class="text-2xl font-black text-slate-900 mt-1">0</div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Staff</div>
+            <div id="count-total-users" class="text-2xl font-black font-mono text-slate-900 mt-2 tabular-nums">0</div>
+            <div class="text-[11px] text-slate-500 mt-1">Registered accounts</div>
           </div>
-          <div class="bg-white p-3.5 rounded-xl border border-amber-200/90 bg-amber-50/20 shadow-2xs">
-            <div class="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">Pending Approval</div>
-            <div id="count-pending-users" class="text-2xl font-black text-amber-700 mt-1">0</div>
+          <div class="bg-white p-4 rounded-2xl border border-amber-200 bg-amber-50/20 shadow-2xs">
+            <div class="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Pending Approval</div>
+            <div id="count-pending-users" class="text-2xl font-black font-mono text-amber-700 mt-2 tabular-nums">0</div>
+            <div class="text-[11px] text-amber-600 mt-1">Awaiting verification</div>
           </div>
-          <div class="bg-white p-3.5 rounded-xl border border-emerald-200/90 bg-emerald-50/20 shadow-2xs">
-            <div class="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">Approved Staff</div>
-            <div id="count-approved-users" class="text-2xl font-black text-emerald-700 mt-1">0</div>
+          <div class="bg-white p-4 rounded-2xl border border-emerald-200 bg-emerald-50/20 shadow-2xs">
+            <div class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Approved Staff</div>
+            <div id="count-approved-users" class="text-2xl font-black font-mono text-emerald-700 mt-2 tabular-nums">0</div>
+            <div class="text-[11px] text-emerald-600 mt-1">Active cashier licenses</div>
           </div>
-          <div class="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-2xs">
-            <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Admins</div>
-            <div id="count-admin-users" class="text-2xl font-black text-slate-900 mt-1">0</div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Administrators</div>
+            <div id="count-admin-users" class="text-2xl font-black font-mono text-slate-900 mt-2 tabular-nums">0</div>
+            <div class="text-[11px] text-slate-500 mt-1">Admin authority</div>
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden flex flex-col">
-          <div class="p-3.5 sm:p-4 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
-            <div class="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
-              <button data-status="ALL" class="user-status-tab px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white shadow-2xs cursor-pointer transition-all">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden flex flex-col">
+          <div class="p-3.5 sm:p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50">
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              <button data-status="ALL" class="user-status-tab px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white shadow-xs cursor-pointer transition-all">
                 All
               </button>
-              <button data-status="PENDING" class="user-status-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition-all">
+              <button data-status="PENDING" class="user-status-tab px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition-all">
                 Pending
               </button>
-              <button data-status="APPROVED" class="user-status-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition-all">
+              <button data-status="APPROVED" class="user-status-tab px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition-all">
                 Approved
               </button>
-              <button data-status="REJECTED" class="user-status-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition-all">
+              <button data-status="REJECTED" class="user-status-tab px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition-all">
                 Rejected
               </button>
             </div>
 
-            <div class="relative min-w-[200px] sm:min-w-[260px]">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                ${ICONS.search}
-              </span>
+            <div class="relative min-w-[220px] sm:min-w-[280px]">
               <input
                 id="users-search-input"
                 type="text"
                 placeholder="Search staff by name or email..."
-                class="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-slate-900 shadow-2xs font-medium"
+                class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 shadow-2xs font-medium"
               />
             </div>
           </div>
@@ -398,13 +395,13 @@ export class UserManagementView extends HTMLElement {
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="border-b border-slate-200 bg-slate-100/70 text-[10px] uppercase font-bold tracking-wider text-slate-600">
-                  <th class="py-2.5 px-4">Staff Member</th>
-                  <th class="py-2.5 px-4">Provider</th>
-                  <th class="py-2.5 px-4">Role</th>
-                  <th class="py-2.5 px-4">Approval Status</th>
-                  <th class="py-2.5 px-4">Registered</th>
-                  <th class="py-2.5 px-4 text-right">Actions</th>
+                <tr class="border-b border-slate-200 bg-slate-50 text-[11px] uppercase font-bold tracking-wider text-slate-500">
+                  <th class="py-3 px-4">Staff Member</th>
+                  <th class="py-3 px-4">Auth Method</th>
+                  <th class="py-3 px-4">Assigned Role</th>
+                  <th class="py-3 px-4">Approval Status</th>
+                  <th class="py-3 px-4">Registered Date</th>
+                  <th class="py-3 px-4 text-right">Access Actions</th>
                 </tr>
               </thead>
               <tbody id="users-table-body">
@@ -412,12 +409,12 @@ export class UserManagementView extends HTMLElement {
             </table>
           </div>
 
-          <div id="users-empty-state" class="hidden py-12 text-center text-slate-400 text-xs space-y-1">
-            <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2">
-              ${ICONS.users}
+          <div id="users-empty-state" class="hidden py-16 text-center text-slate-400 text-xs space-y-2">
+            <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 font-bold flex items-center justify-center mx-auto">
+              0
             </div>
-            <div class="font-bold text-slate-700">No users found</div>
-            <div>Try adjusting your search criteria or status filter.</div>
+            <div class="font-bold text-slate-700">No staff accounts found</div>
+            <div class="text-slate-500">Try adjusting your search criteria or status filter.</div>
           </div>
         </div>
       </div>

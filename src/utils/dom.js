@@ -68,9 +68,9 @@ export function showToast(message, type = 'info', duration = 3000) {
     info: `<span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>`,
   };
 
-  toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-800 shadow-lg shadow-slate-200/60 transition-all duration-200 transform translate-y-2 opacity-0 text-xs font-semibold select-none`;
+  toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-800 shadow-xl transition-all duration-200 transform translate-y-2 opacity-0 text-xs font-bold select-none`;
   toast.innerHTML = `
-    <span class="w-5 h-5 flex items-center justify-center rounded-lg text-xs font-bold shrink-0 ${typeBadge[type] || typeBadge.info}">
+    <span class="w-6 h-6 flex items-center justify-center rounded-xl text-xs font-bold shrink-0 ${typeBadge[type] || typeBadge.info}">
       ${icons[type] || ''}
     </span>
     <span class="truncate">${escapeHtml(message)}</span>
@@ -108,26 +108,26 @@ export function confirmDialog({
     }
 
     const dialog = document.createElement('dialog');
-    dialog.className = 'm-auto w-[84vw] max-w-[340px] rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-2xl p-0 select-none';
-    dialog.style.maxWidth = '340px';
+    dialog.className = 'm-auto w-[88vw] max-w-[360px] rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-2xl p-0 select-none';
+    dialog.style.maxWidth = '360px';
 
     dialog.innerHTML = `
-      <div class="flex flex-col p-4 sm:p-5 bg-white">
-        <div class="flex items-start gap-3 mb-3">
-          <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isDestructive ? 'bg-rose-50 text-rose-600 border border-rose-200' : 'bg-slate-100 text-slate-700 border border-slate-200'}">
+      <div class="flex flex-col p-5 bg-white">
+        <div class="flex items-start gap-3.5 mb-3.5">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isDestructive ? 'bg-rose-50 text-rose-600 border border-rose-200' : 'bg-slate-100 text-slate-700 border border-slate-200'}">
             ${isDestructive ? ICONS.alert : ICONS.shield}
           </div>
           <div class="flex-1 min-w-0">
-            <h3 class="text-xs sm:text-sm font-bold text-slate-900 leading-snug">${escapeHtml(title)}</h3>
-            <p class="text-[11px] sm:text-xs text-slate-500 mt-1 leading-relaxed">${escapeHtml(message)}</p>
+            <h3 class="text-sm font-bold text-slate-900 leading-snug">${escapeHtml(title)}</h3>
+            <p class="text-xs text-slate-500 mt-1 leading-relaxed">${escapeHtml(message)}</p>
           </div>
         </div>
 
-        <div class="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-slate-100">
-          <button id="modal-confirm-cancel" type="button" class="px-3.5 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 active:bg-slate-200 text-slate-700 font-semibold text-xs transition-all cursor-pointer">
+        <div class="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
+          <button id="modal-confirm-cancel" type="button" class="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-all cursor-pointer">
             ${escapeHtml(cancelText)}
           </button>
-          <button id="modal-confirm-proceed" type="button" class="px-3.5 py-1.5 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer ${isDestructive ? 'bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white' : 'bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white'}">
+          <button id="modal-confirm-proceed" type="button" class="px-4 py-2 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer ${isDestructive ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-slate-900 hover:bg-slate-800 text-white'}">
             ${escapeHtml(confirmText)}
           </button>
         </div>

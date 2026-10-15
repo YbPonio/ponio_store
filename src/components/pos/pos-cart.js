@@ -1,6 +1,6 @@
 import { cartStore } from '../../store/cart.store.js';
 import { formatCurrency } from '../../utils/formatters.js';
-import { ICONS, emitEvent, escapeHtml, confirmDialog } from '../../utils/dom.js';
+import { emitEvent, escapeHtml, confirmDialog } from '../../utils/dom.js';
 
 export class PosCart extends HTMLElement {
   constructor() {
@@ -28,9 +28,9 @@ export class PosCart extends HTMLElement {
       clearBtn.addEventListener('click', async () => {
         if (cartStore.getTotalCount() === 0) return;
         const confirmed = await confirmDialog({
-          title: 'Clear Cart',
-          message: 'Are you sure you want to clear all items in the active cart?',
-          confirmText: 'Clear Cart',
+          title: 'Clear Active Ticket',
+          message: 'Are you sure you want to remove all items from the current order?',
+          confirmText: 'Clear All',
           cancelText: 'Cancel',
           isDestructive: true,
         });
@@ -66,10 +66,10 @@ export class PosCart extends HTMLElement {
     const totalAmount = cartStore.getTotalAmount();
 
     const headerCount = this.querySelector('#cart-header-count');
-    if (headerCount) headerCount.textContent = `(${totalCount})`;
+    if (headerCount) headerCount.textContent = totalCount;
 
     const itemsSummaryCount = this.querySelector('#summary-items-count');
-    if (itemsSummaryCount) itemsSummaryCount.textContent = totalCount;
+    if (itemsSummaryCount) itemsSummaryCount.textContent = `${totalCount} item${totalCount === 1 ? '' : 's'}`;
 
     const subtotalEl = this.querySelector('#cart-subtotal');
     if (subtotalEl) subtotalEl.textContent = formatCurrency(totalAmount);
@@ -95,35 +95,35 @@ export class PosCart extends HTMLElement {
     if (emptyState) emptyState.classList.add('hidden');
 
     listContainer.innerHTML = items.map(item => `
-      <div class="flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/80 hover:border-slate-300 transition-all select-none" data-product-id="${item.productId}">
+      <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition-all select-none" data-product-id="${item.productId}">
         <div class="flex-1 min-w-0 pr-2">
-          <h5 class="text-xs font-semibold text-slate-900 truncate">
+          <h5 class="text-xs font-bold text-slate-900 truncate">
             ${escapeHtml(item.name)}
           </h5>
-          <div class="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-600">
-            <span class="font-mono text-slate-900 font-semibold">${formatCurrency(item.sellingPrice)}</span>
-            <span>&times;</span>
-            <span class="text-slate-800 font-bold">${item.quantity}</span>
-            <span class="text-slate-500 font-mono text-[10px]">(${item.maxStock} max)</span>
+          <div class="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500 font-mono">
+            <span class="text-slate-800 font-semibold tabular-nums">${formatCurrency(item.sellingPrice)}</span>
+            <span>x</span>
+            <span class="text-emerald-700 font-bold">${item.quantity}</span>
+            <span class="text-[10px] text-slate-400">(${item.maxStock} in stock)</span>
           </div>
         </div>
 
-        <div class="flex items-center gap-1 bg-white px-1.5 py-0.5 rounded-lg border border-slate-200 mr-2 shadow-2xs">
-          <button class="w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center rounded text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer qty-btn-minus active:scale-95" title="Decrease">
-            ${ICONS.minus}
+        <div class="flex items-center gap-1 bg-white px-1.5 py-1 rounded-lg border border-slate-200 mr-2 shadow-2xs">
+          <button class="w-6 h-6 flex items-center justify-center rounded text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer qty-btn-minus active:scale-95 text-xs font-bold font-mono" title="Decrease">
+            -
           </button>
-          <span class="w-6 text-center font-bold text-xs font-mono text-slate-900">${item.quantity}</span>
-          <button class="w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center rounded text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer qty-btn-plus active:scale-95 ${item.quantity >= item.maxStock ? 'opacity-40 cursor-not-allowed' : ''}" title="Increase" ${item.quantity >= item.maxStock ? 'disabled' : ''}>
-            ${ICONS.plus}
+          <span class="w-7 text-center font-bold text-xs font-mono text-slate-900 tabular-nums">${item.quantity}</span>
+          <button class="w-6 h-6 flex items-center justify-center rounded text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer qty-btn-plus active:scale-95 text-xs font-bold font-mono ${item.quantity >= item.maxStock ? 'opacity-30 cursor-not-allowed' : ''}" title="Increase" ${item.quantity >= item.maxStock ? 'disabled' : ''}>
+            +
           </button>
         </div>
 
-        <div class="flex items-center gap-1.5 text-right">
-          <div class="font-mono font-bold text-xs text-slate-900">
+        <div class="flex items-center gap-2 text-right">
+          <div class="font-mono font-bold text-xs text-slate-900 tabular-nums">
             ${formatCurrency(item.subtotal)}
           </div>
-          <button class="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer remove-item-btn" title="Remove">
-            ${ICONS.trash}
+          <button class="px-1.5 py-1 rounded text-[11px] font-semibold text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer remove-item-btn" title="Remove item">
+            Del
           </button>
         </div>
       </div>
@@ -159,18 +159,19 @@ export class PosCart extends HTMLElement {
   }
 
   render() {
-    this.className = 'flex flex-col h-full bg-white md:border-l border-slate-200/80 overflow-hidden';
+    this.className = 'flex flex-col h-full bg-white overflow-hidden';
     this.innerHTML = `
-      <div class="h-14 px-3 sm:px-5 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-white">
+      <div class="h-14 px-4 sm:px-5 border-b border-slate-200 flex items-center justify-between shrink-0 bg-white">
         <div class="flex items-center gap-2">
-          <button id="cart-back-to-catalog" class="md:hidden p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer" title="Back to Catalog">
-            <span>&larr;</span>
+          <button id="cart-back-to-catalog" class="md:hidden px-2 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer">
+            Catalog
           </button>
-          <span class="text-slate-800">${ICONS.cart}</span>
-          <h3 class="font-semibold text-xs text-slate-900 uppercase tracking-wider">Active Order</h3>
-          <span id="cart-header-count" class="text-xs text-slate-600 font-mono font-bold">(0)</span>
+          <div class="flex items-center gap-1.5">
+            <h3 class="font-black text-xs text-slate-900 uppercase tracking-wider">Active Ticket</h3>
+            <span id="cart-header-count" class="px-1.5 py-0.2 rounded-full bg-slate-900 text-white text-[10px] font-mono font-bold">0</span>
+          </div>
         </div>
-        <button id="clear-cart-btn" class="text-xs text-slate-600 hover:text-rose-600 hover:bg-slate-50 px-2 py-1 rounded-md transition-colors cursor-pointer font-medium" title="Clear active cart">
+        <button id="clear-cart-btn" class="text-xs text-slate-500 hover:text-rose-600 hover:bg-rose-50 px-2 py-1 rounded-md transition-colors cursor-pointer font-semibold" title="Clear active cart">
           Clear
         </button>
       </div>
@@ -178,41 +179,40 @@ export class PosCart extends HTMLElement {
       <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2">
         <div id="cart-items-list" class="space-y-2"></div>
 
-        <div id="cart-empty-state" class="h-full min-h-[200px] flex flex-col items-center justify-center text-center p-6 text-slate-400">
-          <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 mb-2.5">
-            ${ICONS.cart}
+        <div id="cart-empty-state" class="h-full min-h-[220px] flex flex-col items-center justify-center text-center p-6 text-slate-400">
+          <div class="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-500 mb-2.5">
+            POS
           </div>
-          <h4 class="text-xs font-semibold text-slate-700">Order is empty</h4>
-          <p class="text-[11px] text-slate-500 mt-0.5 max-w-[190px]">
-            Select products from the catalog or scan a barcode to begin.
+          <h4 class="text-xs font-bold text-slate-700">Ticket is empty</h4>
+          <p class="text-[11px] text-slate-500 mt-1 max-w-[210px] leading-relaxed">
+            Click any product card or press F2 to search or scan a barcode to add items.
           </p>
         </div>
       </div>
 
-      <div class="p-3.5 sm:p-5 border-t border-slate-200/80 bg-slate-50/70 shrink-0 space-y-3">
-        <div class="space-y-1 text-xs text-slate-600 font-medium">
+      <div class="p-4 sm:p-5 border-t border-slate-200 bg-slate-50 shrink-0 space-y-3.5">
+        <div class="space-y-1.5 text-xs text-slate-600 font-medium">
           <div class="flex justify-between items-center">
-            <span>Items Count</span>
-            <span id="summary-items-count" class="font-mono text-slate-900 font-semibold">0</span>
+            <span>Total Units</span>
+            <span id="summary-items-count" class="font-mono text-slate-900 font-bold tabular-nums">0 items</span>
           </div>
           <div class="flex justify-between items-center">
             <span>Subtotal</span>
-            <span id="cart-subtotal" class="font-mono text-slate-900 font-semibold">₱0.00</span>
+            <span id="cart-subtotal" class="font-mono text-slate-900 font-bold tabular-nums">PHP 0.00</span>
           </div>
           <div class="flex justify-between items-center text-[11px] text-slate-500">
-            <span>Tax (Included)</span>
-            <span class="font-mono">₱0.00</span>
+            <span>Value Added Tax (Included)</span>
+            <span class="font-mono font-medium">PHP 0.00</span>
           </div>
         </div>
 
-        <div class="pt-2 border-t border-slate-200 flex justify-between items-baseline">
-          <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Total</span>
-          <span id="cart-total" class="text-xl font-black text-slate-900 font-mono tracking-tight">₱0.00</span>
+        <div class="pt-3 border-t border-slate-200 flex justify-between items-baseline">
+          <span class="text-xs font-black text-slate-800 uppercase tracking-wider">Total Due</span>
+          <span id="cart-total" class="text-2xl font-black text-slate-900 font-mono tracking-tight tabular-nums">PHP 0.00</span>
         </div>
 
-        <button id="checkout-btn" disabled class="w-full py-3 px-4 rounded-xl font-bold text-xs bg-slate-900 hover:bg-slate-800 text-white shadow-xs disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]">
-          <span>${ICONS.check}</span>
-          <span>Proceed to Checkout</span>
+        <button id="checkout-btn" disabled class="w-full py-3.5 px-4 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-xs disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]">
+          <span>Proceed to Payment</span>
         </button>
       </div>
     `;

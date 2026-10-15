@@ -38,38 +38,38 @@ export class BarcodeScannerModal extends HTMLElement {
 
   render() {
     this.innerHTML = `
-      <dialog class="m-auto w-[88vw] sm:w-[440px] max-w-[440px] rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-2xl overflow-hidden p-0 select-none" style="max-width: 440px;">
+      <dialog class="m-auto w-[92vw] sm:w-[460px] max-w-[460px] rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-2xl overflow-hidden p-0 select-none">
         <div class="flex flex-col max-h-[90dvh]">
-          <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50 shrink-0">
+          <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-slate-50 shrink-0">
             <div>
-              <h3 class="text-xs sm:text-sm font-bold text-slate-900">Scan Product Barcode</h3>
-              <p class="text-[11px] text-slate-500 mt-0.5">Align barcode within the frame to scan</p>
+              <h3 class="text-sm font-bold text-slate-900">Scan Product Barcode</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Align barcode within the scanning reticle</p>
             </div>
-            <button id="scanner-close-btn" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer" title="Close scanner">
-              ${ICONS.x}
+            <button id="scanner-close-btn" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-200/70 transition-colors cursor-pointer" title="Close scanner">
+              Close
             </button>
           </div>
 
-          <div class="p-4 flex flex-col space-y-3 bg-white overflow-y-auto">
-            <div id="scanner-viewport-wrapper" class="relative w-full aspect-4/3 max-h-[260px] bg-slate-950 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200">
+          <div class="p-5 flex flex-col space-y-3.5 bg-white overflow-y-auto">
+            <div id="scanner-viewport-wrapper" class="relative w-full aspect-4/3 max-h-[270px] bg-slate-950 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-200">
               <div id="barcode-reader-viewport" class="w-full h-full"></div>
 
               <div id="scanner-reticle" class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-4">
-                <div class="w-52 h-32 border-2 border-dashed border-emerald-400 rounded-lg relative">
-                  <div class="absolute inset-x-0 top-1/2 h-0.5 bg-emerald-400/80 shadow-xs animate-pulse"></div>
+                <div class="w-56 h-36 border-2 border-dashed border-emerald-400 rounded-xl relative">
+                  <div class="absolute inset-x-0 top-1/2 h-0.5 bg-emerald-400/90 shadow-xs animate-pulse"></div>
                 </div>
               </div>
 
-              <div id="scanner-error-overlay" class="absolute inset-0 bg-slate-900/95 flex flex-col items-center justify-center text-white p-4 hidden z-20 text-center">
+              <div id="scanner-error-overlay" class="absolute inset-0 bg-slate-900/95 flex flex-col items-center justify-center text-white p-5 hidden z-20 text-center">
                 <p id="scanner-error-title" class="text-xs font-bold text-rose-400 mb-1">Camera Access Blocked</p>
                 <p id="scanner-error-desc" class="text-[11px] text-slate-300 leading-relaxed mb-3 max-w-xs">
                   Please enable camera permission in your browser or switch to HTTPS.
                 </p>
                 <div class="flex items-center gap-2">
-                  <button id="scanner-retry-btn" type="button" class="px-3 py-1.5 rounded-lg bg-white text-slate-900 font-bold text-xs hover:bg-slate-100 transition-colors cursor-pointer">
+                  <button id="scanner-retry-btn" type="button" class="px-3.5 py-2 rounded-xl bg-white text-slate-900 font-bold text-xs hover:bg-slate-100 transition-colors cursor-pointer">
                     Retry Camera
                   </button>
-                  <a id="scanner-https-link" href="https://macos.tail266e58.ts.net" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-colors cursor-pointer hidden">
+                  <a id="scanner-https-link" href="https://macos.tail266e58.ts.net" class="px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-colors cursor-pointer hidden">
                     Open HTTPS
                   </a>
                 </div>
@@ -82,17 +82,17 @@ export class BarcodeScannerModal extends HTMLElement {
             </div>
 
             <div class="flex items-center justify-between text-[11px] text-slate-500 px-0.5">
-              <span id="scanner-status-text">Starting camera...</span>
-              <span class="font-mono">UPC / EAN / QR</span>
+              <span id="scanner-status-text">Starting camera engine...</span>
+              <span class="font-mono font-semibold">UPC / EAN / Code-128</span>
             </div>
 
             <div class="flex items-center gap-2 pt-1">
-              <select id="scanner-camera-select" class="flex-1 px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 text-xs text-slate-700 focus:outline-none focus:border-slate-800">
+              <select id="scanner-camera-select" class="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs text-slate-700 focus:outline-none focus:border-emerald-600 font-medium shadow-2xs">
                 <option value="">Detecting cameras...</option>
               </select>
 
-              <label class="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer transition-colors shrink-0">
-                Scan Image
+              <label class="px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-bold cursor-pointer transition-colors shrink-0 shadow-2xs">
+                Scan File
                 <input type="file" id="scanner-image-file" accept="image/*" class="hidden" />
               </label>
             </div>

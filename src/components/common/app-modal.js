@@ -1,5 +1,3 @@
-import { ICONS } from '../../utils/dom.js';
-
 export class AppModal extends HTMLElement {
   constructor() {
     super();
@@ -16,19 +14,19 @@ export class AppModal extends HTMLElement {
 
   render() {
     this.innerHTML = `
-      <dialog class="m-auto w-[88vw] max-w-[460px] rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-2xl overflow-hidden p-0 select-none" style="max-width: 460px;">
+      <dialog class="m-auto w-[92vw] max-w-[500px] rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-2xl overflow-hidden p-0 select-none">
         <div class="flex flex-col max-h-[90dvh]">
-          <div class="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-200 bg-slate-50 shrink-0">
+          <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-slate-50 shrink-0">
             <div>
-              <h3 id="modal-title" class="text-xs sm:text-sm font-bold text-slate-900">Modal Title</h3>
-              <p id="modal-subtitle" class="text-[11px] sm:text-xs text-slate-500 mt-0.5 hidden"></p>
+              <h3 id="modal-title" class="text-sm font-bold text-slate-900">Modal Title</h3>
+              <p id="modal-subtitle" class="text-xs text-slate-500 mt-0.5 hidden"></p>
             </div>
-            <button id="modal-close-btn" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer" title="Close dialog">
-              ${ICONS.x}
+            <button id="modal-close-btn" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-200/70 transition-colors cursor-pointer" title="Close dialog">
+              Close
             </button>
           </div>
 
-          <div id="modal-body" class="p-4 sm:p-5 overflow-y-auto flex-1 bg-white"></div>
+          <div id="modal-body" class="p-5 overflow-y-auto flex-1 bg-white"></div>
         </div>
       </dialog>
     `;
@@ -71,18 +69,18 @@ export class AppModal extends HTMLElement {
     }
 
     const widthMap = {
-      'max-w-xs': 'max-w-[320px]',
-      'max-w-sm': 'max-w-[380px]',
-      'max-w-md': 'max-w-[440px]',
-      'max-w-lg': 'max-w-[480px]',
-      'max-w-xl': 'max-w-[520px]',
-      'max-w-2xl': 'max-w-[580px]',
-      'max-w-3xl': 'max-w-[620px]',
+      'max-w-xs': 'max-w-[340px]',
+      'max-w-sm': 'max-w-[400px]',
+      'max-w-md': 'max-w-[480px]',
+      'max-w-lg': 'max-w-[540px]',
+      'max-w-xl': 'max-w-[600px]',
+      'max-w-2xl': 'max-w-[680px]',
+      'max-w-3xl': 'max-w-[760px]',
     };
-    const targetClass = widthMap[maxWidth] || maxWidth || 'max-w-[460px]';
+    const targetClass = widthMap[maxWidth] || maxWidth || 'max-w-[480px]';
     const allWidthClasses = [
       'max-w-xs', 'max-w-sm', 'max-w-md', 'max-w-lg', 'max-w-xl', 'max-w-2xl', 'max-w-3xl',
-      'max-w-[320px]', 'max-w-[380px]', 'max-w-[440px]', 'max-w-[460px]', 'max-w-[480px]', 'max-w-[520px]', 'max-w-[580px]', 'max-w-[620px]'
+      'max-w-[340px]', 'max-w-[400px]', 'max-w-[480px]', 'max-w-[540px]', 'max-w-[600px]', 'max-w-[680px]', 'max-w-[760px]'
     ];
     this.dialog.classList.remove(...allWidthClasses);
     this.dialog.classList.add(targetClass);

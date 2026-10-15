@@ -1,6 +1,6 @@
 import { inventoryService } from '../../services/inventory.service.js';
 import { barcodeLookupService } from '../../services/barcode-lookup.service.js';
-import { ICONS, showToast, escapeHtml } from '../../utils/dom.js';
+import { showToast, escapeHtml } from '../../utils/dom.js';
 import '../common/barcode-scanner-modal.js';
 import '../common/app-modal.js';
 
@@ -27,7 +27,7 @@ export class ProductForm extends HTMLElement {
 
     const content = document.createElement('form');
     content.id = 'product-modal-form';
-    content.className = 'space-y-3.5';
+    content.className = 'space-y-4';
 
     const p = product || {
       barcode: prefill?.barcode || '',
@@ -42,29 +42,29 @@ export class ProductForm extends HTMLElement {
     };
 
     content.innerHTML = `
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div class="sm:col-span-2">
-          <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Product Name *</label>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Product Name *</label>
           <input
             id="input-product-name"
             name="name"
             type="text"
             required
             value="${escapeHtml(p.name)}"
-            placeholder="e.g. Barako Ground Coffee 250g"
-            class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
+            placeholder="e.g. San Miguel Pale Pilsen 330ml"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 shadow-2xs font-semibold"
           />
         </div>
 
-        <div class="sm:col-span-2">
-          <div class="flex items-center justify-between mb-1">
-            <label class="text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Barcode / SKU (Optional)</label>
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Barcode / SKU</label>
             <div class="flex items-center gap-1.5">
-              <button type="button" id="form-scan-camera-btn" class="px-2 py-0.5 rounded text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors cursor-pointer">
+              <button type="button" id="form-scan-camera-btn" class="px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors cursor-pointer">
                 Scan Camera
               </button>
-              <button type="button" id="form-lookup-barcode-btn" class="px-2 py-0.5 rounded text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors cursor-pointer">
-                Lookup Info
+              <button type="button" id="form-lookup-barcode-btn" class="px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors cursor-pointer">
+                Lookup Details
               </button>
             </div>
           </div>
@@ -74,27 +74,27 @@ export class ProductForm extends HTMLElement {
             type="text"
             value="${escapeHtml(p.barcode || '')}"
             placeholder="e.g. 480000000001 (Optional)"
-            class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs font-mono text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 shadow-2xs font-bold"
           />
         </div>
 
-        <div class="sm:col-span-2">
-          <div class="flex items-center justify-between mb-1">
-            <label class="text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Product Photo (Optional)</label>
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Product Photo</label>
             <div class="flex items-center gap-1.5">
               <input type="file" id="form-upload-file-input" accept="image/*" class="hidden" />
               <input type="file" id="form-camera-snap-input" accept="image/*" capture="environment" class="hidden" />
-              <button type="button" id="form-upload-photo-btn" class="px-2 py-0.5 rounded text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors cursor-pointer">
+              <button type="button" id="form-upload-photo-btn" class="px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors cursor-pointer">
                 Upload Photo
               </button>
-              <button type="button" id="form-snap-camera-btn" class="px-2 py-0.5 rounded text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors cursor-pointer">
-                Snap Camera
+              <button type="button" id="form-snap-camera-btn" class="px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors cursor-pointer">
+                Camera Snap
               </button>
             </div>
           </div>
-          <div class="flex items-center gap-2.5">
-            <div id="image-preview-box" class="w-14 h-14 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden">
-              ${p.imageUrl ? `<img src="${escapeHtml(p.imageUrl)}" alt="Preview" class="w-full h-full object-contain p-1" onerror="this.parentElement.innerHTML='<span class=\\'text-xs text-slate-400 font-bold\\'>No Pic</span>'" />` : `<span class="text-xs text-slate-400 font-bold">No Pic</span>`}
+          <div class="flex items-center gap-3">
+            <div id="image-preview-box" class="w-14 h-14 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
+              ${p.imageUrl ? `<img src="${escapeHtml(p.imageUrl)}" alt="Preview" class="w-full h-full object-contain p-1" onerror="this.parentElement.innerHTML='<span class=\\'text-[10px] text-slate-400 font-bold\\'>No Pic</span>'" />` : `<span class="text-[10px] text-slate-400 font-bold">No Pic</span>`}
             </div>
             <input
               id="input-image-url"
@@ -102,110 +102,114 @@ export class ProductForm extends HTMLElement {
               type="text"
               value="${escapeHtml(p.imageUrl || '')}"
               placeholder="https://... or photo data URL"
-              class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
+              class="flex-1 px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs font-mono text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 shadow-2xs"
             />
           </div>
         </div>
 
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Category *</label>
-          <select
-            id="input-category"
-            name="category"
-            class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
-          >
-            ${Array.from(new Set(['Beverages', 'Snacks', 'Groceries', 'Household', 'General', p.category].filter(Boolean))).map(cat => `
-              <option value="${escapeHtml(cat)}" ${p.category === cat ? 'selected' : ''}>${escapeHtml(cat)}</option>
-            `).join('')}
-          </select>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Category *</label>
+            <select
+              id="input-category"
+              name="category"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs font-semibold"
+            >
+              ${Array.from(new Set(['Beverages', 'Snacks', 'Groceries', 'Household', 'General', p.category].filter(Boolean))).map(cat => `
+                <option value="${escapeHtml(cat)}" ${p.category === cat ? 'selected' : ''}>${escapeHtml(cat)}</option>
+              `).join('')}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Cost Price (PHP)</label>
+            <input
+              id="input-cost-price"
+              name="costPrice"
+              type="number"
+              step="0.01"
+              min="0"
+              value="${p.costPrice !== '' && p.costPrice !== undefined && p.costPrice !== null ? p.costPrice : ''}"
+              placeholder="0.00 (Optional)"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs font-mono text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 shadow-2xs font-bold"
+            />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Selling Price (PHP) *</label>
+            <input
+              id="input-selling-price"
+              name="sellingPrice"
+              type="number"
+              step="0.01"
+              min="0"
+              required
+              value="${p.sellingPrice !== '' && p.sellingPrice !== undefined && p.sellingPrice !== null ? p.sellingPrice : ''}"
+              placeholder="0.00"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs font-mono text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 shadow-2xs font-bold"
+            />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Gross Margin Preview</label>
+            <div class="h-[42px] px-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+              <span class="text-slate-500 text-[11px]">Profit:</span>
+              <span id="margin-calc-text" class="font-mono font-bold text-slate-900 tabular-nums">—</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Initial Stock *</label>
+            <input
+              name="stock"
+              type="number"
+              min="0"
+              required
+              value="${p.stock !== undefined && p.stock !== null ? p.stock : 0}"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs font-mono text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 shadow-2xs font-bold"
+            />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Low Stock Alert *</label>
+            <input
+              name="lowStockThreshold"
+              type="number"
+              min="1"
+              required
+              value="${p.lowStockThreshold || 10}"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs font-mono text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 shadow-2xs font-bold"
+            />
+          </div>
         </div>
 
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Cost Price (PHP) (Optional)</label>
-          <input
-            id="input-cost-price"
-            name="costPrice"
-            type="number"
-            step="0.01"
-            min="0"
-            value="${p.costPrice !== '' && p.costPrice !== undefined && p.costPrice !== null ? p.costPrice : ''}"
-            placeholder="0.00 (Optional)"
-            class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
-          />
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Selling Price (PHP) *</label>
-          <input
-            id="input-selling-price"
-            name="sellingPrice"
-            type="number"
-            step="0.01"
-            min="0"
-            required
-            value="${p.sellingPrice !== '' && p.sellingPrice !== undefined && p.sellingPrice !== null ? p.sellingPrice : ''}"
-            placeholder="0.00"
-            class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
-          />
-        </div>
-
-        <div class="sm:col-span-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
-          <span class="text-slate-500">Projected Margin:</span>
-          <span id="margin-calc-text" class="font-mono font-bold text-slate-900">—</span>
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Current Stock *</label>
-          <input
-            name="stock"
-            type="number"
-            min="0"
-            required
-            value="${p.stock !== undefined && p.stock !== null ? p.stock : 0}"
-            class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
-          />
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Low Stock Alert *</label>
-          <input
-            name="lowStockThreshold"
-            type="number"
-            min="1"
-            required
-            value="${p.lowStockThreshold || 10}"
-            class="w-full px-3 py-2.5 sm:py-2 rounded-xl bg-white border border-slate-300 text-sm sm:text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800 shadow-2xs font-medium"
-          />
-        </div>
-
-        <div class="sm:col-span-2 flex items-center gap-2 pt-1">
+        <div class="flex items-center gap-2 pt-1">
           <input
             type="checkbox"
             name="isActive"
             id="is-active-chk"
             ${p.isActive !== false ? 'checked' : ''}
-            class="rounded border-slate-300 text-slate-900 focus:ring-slate-900 w-4 h-4 accent-slate-900 cursor-pointer"
+            class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 accent-emerald-600 cursor-pointer"
           />
-          <label for="is-active-chk" class="text-xs font-medium text-slate-700 cursor-pointer select-none">
+          <label for="is-active-chk" class="text-xs font-bold text-slate-700 cursor-pointer select-none">
             Active in POS catalog
           </label>
         </div>
       </div>
 
-      <div class="flex items-center gap-2.5 pt-2 border-t border-slate-100">
-        <button type="button" id="form-cancel-btn" class="flex-1 py-2.5 px-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-all cursor-pointer">
+      <div class="flex items-center gap-2 pt-3 border-t border-slate-100">
+        <button type="button" id="form-cancel-btn" class="flex-1 py-2.5 px-4 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-bold transition-all cursor-pointer">
           Cancel
         </button>
-        <button type="submit" id="form-submit-btn" class="flex-1 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5">
-          <span>${ICONS.check}</span>
+        <button type="submit" id="form-submit-btn" class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5">
           <span>${isEdit ? 'Save Changes' : 'Create Product'}</span>
         </button>
       </div>
     `;
 
     modal.open({
-      title: isEdit ? 'Edit Product' : 'Add New Product',
-      subtitle: isEdit ? `SKU: ${p.barcode || p.id}` : 'Fill in item details and pricing',
+      title: isEdit ? 'Edit Product SKU' : 'New Catalog Item',
+      subtitle: isEdit ? `SKU: ${p.barcode || p.id}` : 'Fill in product information and pricing',
       content,
       maxWidth: 'max-w-lg',
     });
@@ -228,8 +232,8 @@ export class ProductForm extends HTMLElement {
         const cost = parseFloat(costInput.value);
         const profit = sell - cost;
         const margin = (profit / sell) * 100;
-        marginText.textContent = `PHP ${profit.toFixed(2)} (${margin.toFixed(1)}%)`;
-        marginText.className = margin >= 0 ? 'font-mono font-bold text-emerald-700' : 'font-mono font-bold text-rose-600';
+        marginText.textContent = `PHP ${profit.toFixed(2)} (${margin.toFixed(0)}%)`;
+        marginText.className = margin >= 0 ? 'font-mono font-bold text-emerald-700 tabular-nums' : 'font-mono font-bold text-rose-600 tabular-nums';
       } else {
         marginText.textContent = '—';
       }
@@ -239,9 +243,9 @@ export class ProductForm extends HTMLElement {
       if (!imagePreviewBox) return;
       const cleanUrl = String(url || '').trim();
       if (cleanUrl) {
-        imagePreviewBox.innerHTML = `<img src="${escapeHtml(cleanUrl)}" alt="Preview" class="w-full h-full object-contain p-1" onerror="this.parentElement.innerHTML='<span class=\\'text-xs text-slate-400 font-bold\\'>No Pic</span>'" />`;
+        imagePreviewBox.innerHTML = `<img src="${escapeHtml(cleanUrl)}" alt="Preview" class="w-full h-full object-contain p-1" onerror="this.parentElement.innerHTML='<span class=\\'text-[10px] text-slate-400 font-bold\\'>No Pic</span>'" />`;
       } else {
-        imagePreviewBox.innerHTML = `<span class="text-xs text-slate-400 font-bold">No Pic</span>`;
+        imagePreviewBox.innerHTML = `<span class="text-[10px] text-slate-400 font-bold">No Pic</span>`;
       }
     };
 
@@ -337,7 +341,7 @@ export class ProductForm extends HTMLElement {
           showToast('Barcode lookup failed: ' + (e.message || 'Network error'), 'error');
         } finally {
           lookupBtn.disabled = false;
-          lookupBtn.textContent = 'Lookup Info';
+          lookupBtn.textContent = 'Lookup Details';
         }
       });
     }
@@ -408,7 +412,7 @@ export class ProductForm extends HTMLElement {
           if (imageInput && productInfo.imageUrl) {
             imageInput.value = productInfo.imageUrl;
             if (imagePreviewBox) {
-              imagePreviewBox.innerHTML = `<img src="${escapeHtml(productInfo.imageUrl)}" alt="Preview" class="w-full h-full object-contain p-1" onerror="this.parentElement.innerHTML='<span class=\\'text-xs text-slate-400 font-bold\\'>No Pic</span>'" />`;
+              imagePreviewBox.innerHTML = `<img src="${escapeHtml(productInfo.imageUrl)}" alt="Preview" class="w-full h-full object-contain p-1" onerror="this.parentElement.innerHTML='<span class=\\'text-[10px] text-slate-400 font-bold\\'>No Pic</span>'" />`;
             }
           }
           if (sellInput && productInfo.sellingPrice > 0) {

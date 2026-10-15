@@ -32,12 +32,17 @@ export class AppHeader extends HTMLElement {
       const el = this.querySelector('#header-clock');
       if (el) {
         const now = new Date();
-        el.textContent = now.toLocaleTimeString('en-US', {
+        const timePart = now.toLocaleTimeString('en-US', {
           hour: '2-digit',
           minute: '2-digit',
           second: '2-digit',
           hour12: true,
         });
+        const datePart = now.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        });
+        el.textContent = `${timePart} · ${datePart}`;
       }
     };
     updateTime();
@@ -115,19 +120,22 @@ export class AppHeader extends HTMLElement {
 
       if (isMobileNav) {
         if (isActive) {
-          btn.className = 'flex flex-col items-center justify-center flex-1 py-1 px-2 text-slate-900 font-bold transition-all relative';
+          btn.className = 'flex flex-col items-center justify-center flex-1 py-1 px-2 text-emerald-700 font-bold transition-all relative';
           const iconSpan = btn.querySelector('.mobile-icon');
-          if (iconSpan) iconSpan.className = 'mobile-icon w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-xs transition-all';
+          if (iconSpan) iconSpan.className = 'mobile-icon w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs transition-all';
         } else {
           btn.className = 'flex flex-col items-center justify-center flex-1 py-1 px-2 text-slate-500 font-medium hover:text-slate-800 transition-all relative';
           const iconSpan = btn.querySelector('.mobile-icon');
-          if (iconSpan) iconSpan.className = 'mobile-icon w-8 h-8 rounded-full text-slate-600 flex items-center justify-center hover:bg-slate-100 transition-all';
+          if (iconSpan) iconSpan.className = 'mobile-icon w-8 h-8 rounded-xl text-slate-600 flex items-center justify-center hover:bg-slate-100 transition-all';
         }
       } else {
+        const shortcutTag = btn.querySelector('.nav-shortcut');
         if (isActive) {
-          btn.className = 'flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white shadow-xs transition-all';
+          btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white shadow-xs transition-all cursor-pointer';
+          if (shortcutTag) shortcutTag.className = 'nav-shortcut text-[10px] font-mono px-1 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700';
         } else {
-          btn.className = 'flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all';
+          btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer';
+          if (shortcutTag) shortcutTag.className = 'nav-shortcut text-[10px] font-mono px-1 py-0.2 rounded bg-slate-100 text-slate-500 border border-slate-200';
         }
       }
     });
@@ -143,27 +151,31 @@ export class AppHeader extends HTMLElement {
 
     if (!isAuthenticated || isPending || isRejected) {
       this.innerHTML = `
-        <header class="h-14 bg-white border-b border-slate-200/90 px-3 sm:px-6 flex items-center justify-between z-30 shrink-0 select-none">
-          <div class="flex items-center">
-            <span class="font-black text-base sm:text-lg tracking-tight text-slate-900">PonioStore</span>
+        <header class="h-14 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between z-30 shrink-0 select-none shadow-xs">
+          <div class="flex items-center gap-2">
+            <div class="flex items-center tracking-tight">
+              <span class="font-black text-lg text-slate-900">PONIO</span>
+              <span class="ml-1 text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-600 text-white">STORE</span>
+            </div>
+            <span class="hidden sm:inline-block text-[11px] font-mono font-medium text-slate-400 pl-2 border-l border-slate-200">RetailCore POS</span>
           </div>
 
           <div class="flex items-center gap-2">
-            <div class="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium ${
+            <div class="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold ${
               isPending
                 ? 'bg-amber-50 text-amber-800 border border-amber-200'
                 : isRejected
                 ? 'bg-rose-50 text-rose-700 border border-rose-200'
                 : 'bg-slate-100 text-slate-700 border border-slate-200'
             }">
-              <span>${isPending ? ICONS.shield : isRejected ? ICONS.alert : ICONS.lock}</span>
+              <span class="w-2 h-2 rounded-full ${isPending ? 'bg-amber-500' : isRejected ? 'bg-rose-500' : 'bg-slate-500'}"></span>
               <span>${isPending ? 'Pending Approval' : isRejected ? 'Access Denied' : 'Authentication Gate'}</span>
             </div>
             ${
               isAuthenticated
                 ? `
-              <button id="logout-cashier-btn" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer" title="Sign Out">
-                ${ICONS.logOut}
+              <button id="logout-cashier-btn" class="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:text-rose-700 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 transition-colors cursor-pointer" title="Sign Out">
+                Sign Out
               </button>
             `
                 : ''
@@ -175,33 +187,36 @@ export class AppHeader extends HTMLElement {
     }
 
     const initial = (user.name || 'C').charAt(0).toUpperCase();
+    const roleLabel = user.role || 'CASHIER';
 
     this.innerHTML = `
-      <header class="h-14 bg-white border-b border-slate-200/90 px-3 sm:px-6 flex items-center justify-between z-30 shrink-0 select-none">
+      <header class="h-14 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center justify-between z-30 shrink-0 select-none shadow-xs">
         <div class="flex items-center gap-4 sm:gap-6">
-          <div id="header-brand-logo" class="flex items-center cursor-pointer">
-            <span class="font-black text-base sm:text-lg tracking-tight text-slate-900 hover:text-slate-700 transition-colors">PonioStore</span>
+          <div id="header-brand-logo" class="flex items-center cursor-pointer group">
+            <div class="flex items-center tracking-tight">
+              <span class="font-black text-lg text-slate-900 group-hover:text-slate-700 transition-colors">PONIO</span>
+              <span class="ml-1 text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-600 text-white shadow-2xs">STORE</span>
+            </div>
+            <span class="hidden lg:inline-block text-[11px] font-mono text-slate-400 pl-2.5 ml-2.5 border-l border-slate-200">RetailCore v2.4</span>
           </div>
 
-          <nav class="hidden md:flex items-center gap-1">
-            <button data-route="/pos" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all">
-              <span class="text-current">${ICONS.pos}</span>
+          <nav class="hidden md:flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200/90 gap-1">
+            <button data-route="/pos" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">
               <span>Register</span>
-              <span class="cart-badge-count hidden px-1.5 py-0.2 rounded-full bg-emerald-500 text-white text-[10px] font-bold leading-none">0</span>
+              <span class="nav-shortcut text-[10px] font-mono px-1 py-0.2 rounded bg-slate-200 text-slate-600">F4</span>
+              <span class="cart-badge-count hidden px-1.5 py-0.2 rounded-full bg-emerald-600 text-white text-[10px] font-bold font-mono leading-none">0</span>
             </button>
-            <button data-route="/inventory" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">
-              <span class="text-current">${ICONS.inventory}</span>
+            <button data-route="/inventory" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-white transition-all">
               <span>Inventory</span>
+              <span class="nav-shortcut text-[10px] font-mono px-1 py-0.2 rounded bg-slate-200 text-slate-600">F8</span>
             </button>
-            <button data-route="/orders" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">
-              <span class="text-current">${ICONS.orders}</span>
-              <span>Sales Orders</span>
+            <button data-route="/orders" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-white transition-all">
+              <span>Orders</span>
             </button>
             ${
               isAdmin
                 ? `
-            <button data-route="/users" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">
-              <span class="text-current">${ICONS.users}</span>
+            <button data-route="/users" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-white transition-all">
               <span>Users</span>
             </button>
             `
@@ -211,65 +226,56 @@ export class AppHeader extends HTMLElement {
         </div>
 
         <div class="flex items-center gap-2 sm:gap-3">
-          <div class="flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-medium ${
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
             isLive
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
-              : 'bg-amber-50 text-amber-800 border border-amber-200/80'
-          }" title="${isLive ? 'Connected to Cloud Firestore' : 'Running in Local Storage Mode'}">
-            <span class="w-1.5 h-1.5 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}"></span>
-            <span class="hidden xs:inline">${isLive ? 'Cloud Firestore' : 'Local Storage'}</span>
-            <span class="xs:hidden">${isLive ? 'Cloud' : 'Local'}</span>
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+              : 'bg-amber-50 text-amber-800 border-amber-200'
+          }" title="${isLive ? 'Active cloud database connection' : 'Local storage demo mode'}">
+            <span class="w-2 h-2 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}"></span>
+            <span class="hidden sm:inline">${isLive ? 'Cloud Database' : 'Local Storage Mode'}</span>
+            <span class="sm:hidden">${isLive ? 'Cloud' : 'Local'}</span>
           </div>
 
-          <div class="hidden lg:flex items-center font-mono text-[11px] text-slate-500 bg-slate-100/70 px-2.5 py-1 rounded-lg border border-slate-200/70">
+          <div class="hidden xl:flex items-center font-mono text-[11px] font-medium text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 tabular-nums">
             <span id="header-clock">--:--:-- --</span>
           </div>
 
-          <div class="flex items-center gap-1 pl-2 pr-1 py-1 rounded-lg bg-slate-50 border border-slate-200/80">
-            <div class="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center font-semibold text-[10px] text-slate-800 shrink-0">
+          <div class="flex items-center gap-2 pl-2 pr-1.5 py-1 rounded-xl bg-white border border-slate-200 shadow-2xs">
+            <div class="w-6 h-6 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-[11px] shrink-0">
               ${initial}
             </div>
             <div class="text-left leading-tight hidden sm:block pr-1">
-              <div id="cashier-name" class="font-semibold text-slate-900 text-[11px] truncate max-w-[120px]">${user.name}</div>
+              <div class="flex items-center gap-1.5">
+                <span id="cashier-name" class="font-bold text-slate-900 text-xs truncate max-w-[110px]">${user.name}</span>
+                <span class="text-[9px] font-mono font-bold uppercase px-1 py-0.2 rounded ${isAdmin ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-600 border border-slate-200'}">${roleLabel}</span>
+              </div>
             </div>
-            <button id="logout-cashier-btn" class="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer" title="Sign Out">
-              ${ICONS.logOut}
+            <button id="logout-cashier-btn" class="px-2 py-0.5 rounded-md text-[11px] font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors cursor-pointer" title="Sign Out">
+              Exit
             </button>
           </div>
         </div>
       </header>
 
-      <nav id="mobile-bottom-nav" class="flex md:hidden fixed bottom-0 inset-x-0 h-14 bg-white border-t border-slate-200 z-40 items-center justify-around px-1 shadow-xs select-none">
+      <nav id="mobile-bottom-nav" class="flex md:hidden fixed bottom-0 inset-x-0 h-14 bg-white border-t border-slate-200 z-40 items-center justify-around px-1 shadow-lg select-none">
         <button data-route="/pos" class="flex flex-col items-center justify-center flex-1 py-1 px-2 text-slate-900 font-bold transition-all relative cursor-pointer">
-          <span class="mobile-icon w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-xs transition-all">
-            ${ICONS.pos}
-          </span>
-          <span class="text-[10px] tracking-tight mt-0.5">Register</span>
-          <span class="cart-badge-count hidden absolute top-0.5 right-[calc(50%-18px)] px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-mono font-bold leading-none shadow-xs">0</span>
+          <span class="text-xs font-bold tracking-tight">Register</span>
+          <span class="cart-badge-count hidden absolute top-1 right-[calc(50%-22px)] px-1.5 py-0.2 rounded-full bg-emerald-600 text-white text-[9px] font-mono font-bold leading-none">0</span>
         </button>
 
         <button data-route="/inventory" class="flex flex-col items-center justify-center flex-1 py-1 px-2 text-slate-500 font-medium transition-all relative cursor-pointer">
-          <span class="mobile-icon w-8 h-8 rounded-full text-slate-600 flex items-center justify-center hover:bg-slate-100 transition-all">
-            ${ICONS.inventory}
-          </span>
-          <span class="text-[10px] tracking-tight mt-0.5">Inventory</span>
+          <span class="text-xs font-semibold tracking-tight">Inventory</span>
         </button>
 
         <button data-route="/orders" class="flex flex-col items-center justify-center flex-1 py-1 px-2 text-slate-500 font-medium transition-all relative cursor-pointer">
-          <span class="mobile-icon w-8 h-8 rounded-full text-slate-600 flex items-center justify-center hover:bg-slate-100 transition-all">
-            ${ICONS.orders}
-          </span>
-          <span class="text-[10px] tracking-tight mt-0.5">Orders</span>
+          <span class="text-xs font-semibold tracking-tight">Orders</span>
         </button>
 
         ${
           isAdmin
             ? `
         <button data-route="/users" class="flex flex-col items-center justify-center flex-1 py-1 px-2 text-slate-500 font-medium transition-all relative cursor-pointer">
-          <span class="mobile-icon w-8 h-8 rounded-full text-slate-600 flex items-center justify-center hover:bg-slate-100 transition-all">
-            ${ICONS.users}
-          </span>
-          <span class="text-[10px] tracking-tight mt-0.5">Users</span>
+          <span class="text-xs font-semibold tracking-tight">Users</span>
         </button>
         `
             : ''
